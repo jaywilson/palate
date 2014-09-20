@@ -9,6 +9,11 @@
 	<link rel="stylesheet" href="http://code.jquery.com/mobile/1.4.4/jquery.mobile-1.4.4.min.css" />
 
 	<script src="http://code.jquery.com/jquery-2.1.0.min.js"></script>
+	<script>
+		$(document).on( "mobileinit", function() {
+		  $.mobile.defaultPageTransition = "pop";
+		});
+	</script>
 	<script src="http://code.jquery.com/mobile/1.4.4/jquery.mobile-1.4.4.min.js"></script>
 
 	<script src="static/js/underscore.js"></script>

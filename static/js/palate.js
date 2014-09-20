@@ -1,13 +1,13 @@
-//
-// configuration
-//
-_.templateSettings = {
-  interpolate: /\{\{(.+?)\}\}/g
-};
-
 var Palate = {
 	init: function() {
 		var me = this;
+
+		//
+		// configuration
+		//
+		_.templateSettings = {
+			interpolate: /\{\{(.+?)\}\}/g
+		};
 		
 		// 
 		// models
