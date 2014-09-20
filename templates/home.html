@@ -26,8 +26,6 @@
 	$(function() { Palate.main() });
 </script>
 
-<input type="file" capture="camera" accept="image/*" id="takePictureField">
-
 <!-- Start of first page -->
 <div data-role="page" id="challengeListView">
 	<div data-role="header">
@@ -35,6 +33,7 @@
 	</div><!-- /header -->
 
 	<div role="main" class="ui-content">
+		<input type="file" capture="camera" accept="image/*" id="takePictureField">
 		<div id="challengeListCont"></div>
 		<div id="cameraImageCont">
 			<img id="cameraImage"/>
