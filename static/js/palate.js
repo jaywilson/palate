@@ -8,6 +8,7 @@ _.templateSettings = {
 var Palate = {
 	init: function() {
 		var me = this;
+		
 		// 
 		// models
 		//
@@ -89,9 +90,11 @@ var Palate = {
 		var challengesView = new this.ChallengeListView({collection: challenges});
 		challengesView.render();
 
-		$("#challengeView").on("pagebeforecreate", function() {
-			var challengeView = new me.ChallengeView({model: me.ListToDetail.modelClicked});
-			challengeView.render();			
+		$("body").on( "pagecontainerbeforeshow", function( event, ui ) {
+			if (ui.prevPage[0].id == "challengeListView" && ui.toPage[0].id == "challengeView") {
+				var challengeView = new me.ChallengeView({model: me.ListToDetail.modelClicked});
+				challengeView.render();
+			}
 		});
 	}
 };
