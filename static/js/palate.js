@@ -85,7 +85,8 @@ var Palate = {
 		//
 		// take pictures
 		//
-		$("#takePictureField").on("change", function() {
+		$("#takePictureField").on("change", function(event) {
+			$("#debug").html(event.target.files.length + " " + event.target.files[0].type.indexOf("image/"));
 			if (event.target.files.length == 1 && event.target.files[0].type.indexOf("image/") == 0) {
             	$("#cameraImage").attr("src", URL.createObjectURL(event.target.files[0]));
         	}
