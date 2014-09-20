@@ -10,7 +10,7 @@ var Palate = {
         }
 
 		_.templateSettings = {
-			interpolate: /\{\{(.+?)\}\}/g
+			interpolate: /\{(.+?)\}/g
 		};
 		
 		// 
@@ -19,7 +19,9 @@ var Palate = {
 		this.Challenge = Backbone.Model.extend({
 			id: 0,
 			title: "",
-			desc: ""
+			desc: "",
+			tags: [],
+			imageFile: ""
 		});
 
 		this.ChallengeList = Backbone.Collection.extend({
@@ -33,8 +35,10 @@ var Palate = {
 		//
 		// templates
 		//
-		this.listElementTmp = _.template("<a href='#challengeView' class='ui-btn'>{{ title }}</a>");
-		this.detailTmp = _.template("<p>{{ desc }}</p>");
+		this.challengeItemTmp = _.template(document.querySelector("#challengeItemTmp").innerHTML);
+		this.challengeItemTagsTmp = _.template(document.querySelector("#challengeItemTagsTmp").innerHTML);
+
+		this.detailTmp = _.template("<p>{ desc }</p>");
 
 		//
 		// views
@@ -50,7 +54,20 @@ var Palate = {
 			render: function() {
 				var view = this;
 				_.each(this.collection.models, function(element, index, list) {
-					var row = me.listElementTmp(element.pick("title"));
+					var attr = element.attributes;
+
+					var tagsHtml = "";
+					_.each(attr.tags, function(elem) {
+						tagsHtml += me.challengeItemTagsTmp({tagName: elem});
+					});
+
+					var data = {
+						title: attr.title,
+						imageUrl: 'static/img/' + attr.imageFile,
+						tags: tagsHtml
+					};
+
+					var row = me.challengeItemTmp(data);
 					var $row = $(row);
 
 					$row.bind("click", function(event) {
@@ -87,7 +104,9 @@ var Palate = {
 		//
 		$("#takePictureField").on("change", function(event) {
 			if (event.target.files.length == 1 && event.target.files[0].type.indexOf("image/") == 0) {
-            	$("#cameraImage").attr("src", URL.createObjectURL(event.target.files[0]));
+				var imageFile = event.target.files[0];
+				var imageURL = URL.createObjectURL(imageFile);
+            	$("#cameraImage").attr("src", imageURL);
         	}
 		});
 	},
@@ -104,7 +123,7 @@ var Palate = {
 		challengesView.render();
 
 		$("body").on( "pagecontainerbeforeshow", function( event, ui ) {
-			if (ui.prevPage[0].id == "challengeListView" && ui.toPage[0].id == "challengeView") {
+			if (ui.prevPage[0].id == "challengeListPage" && ui.toPage[0].id == "challengePage") {
 				var challengeView = new me.ChallengeView({model: me.ListToDetail.modelClicked});
 				challengeView.render();
 			}

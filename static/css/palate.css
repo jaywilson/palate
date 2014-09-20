@@ -1,3 +1,22 @@
 #cameraImage {
 	width: 100%;	
 }
+
+.palate {
+	color: #E6A947;
+	text-align: center;
+}
+
+.challengeTitle {
+	position: relative;
+	bottom: -50px;
+	left: 0;
+	width: 100%;
+	color: white;
+	padding: 10px;
+}
+
+.challengeImage { 
+	position: relative; 
+	width: 100%; 
+}
