@@ -10,11 +10,15 @@ app = Flask("palate")
 def hello():
     return render_template('home.html')
 
+@app.route("/details")
+def challengeDetails():    
+	return render_template('challenge-details.html')
+
 @app.route("/challenges.json")
 def getChallenges():
 	challenges = []
-	challenges.append({"title": "Meatless Mondays", "desc": "Don't eat meat on Mondays"})
-	challenges.append({"title": "Farm to Table Meal", "desc": "Cook a Farm to Table dinner"})
+	challenges.append({"id": 0, "title": "Meatless Mondays", "desc": "Don't eat meat on Mondays"})
+	challenges.append({"id": 1, "title": "Farm to Table Meal", "desc": "Cook a Farm to Table dinner"})
 	
 	return jsonify({"items": challenges})    
 
