@@ -5,6 +5,10 @@ var Palate = {
 		//
 		// configuration
 		//
+		if (!("url" in window) && ("webkitURL" in window)) {
+            window.URL = window.webkitURL;   
+        }
+
 		_.templateSettings = {
 			interpolate: /\{\{(.+?)\}\}/g
 		};
@@ -77,6 +81,15 @@ var Palate = {
 		this.ListToDetail = {
 			modelClicked: {}
 		};
+
+		//
+		// take pictures
+		//
+		$("#takePictureField").on("change", function() {
+			if (event.target.files.length == 1 && event.target.files[0].type.indexOf("image/") == 0) {
+            	$("#cameraImage").attr("src", URL.createObjectURL(event.target.files[0]));
+        	}
+		});
 	},
 
 	main: function() {
