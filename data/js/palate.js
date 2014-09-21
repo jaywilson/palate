@@ -116,16 +116,19 @@ var Palate = {
 
 		var me = this;
 
-		var challenges = new this.ChallengeList();
-		challenges.fetch({"async": false});
-
-		var challengesView = new this.ChallengeListView({collection: challenges});
-		challengesView.render();
-
 		$("body").on( "pagecontainerbeforeshow", function( event, ui ) {
-			if (ui.prevPage[0].id == "challengeListPage" && ui.toPage[0].id == "challengePage") {
+			var prevId = ui.prevPage[0].id;
+			var toId = ui.toPage[0].id;
+
+			if (prevId == "challengeListPage" && toId == "challengePage") {
 				var challengeView = new me.ChallengeView({model: me.ListToDetail.modelClicked});
 				challengeView.render();
+			} else if (prevId == "loginPage" && toId == "challengeListPage") {
+				var challenges = new me.ChallengeList();
+				challenges.fetch({"async": false});
+
+				var challengesView = new me.ChallengeListView({collection: challenges});
+				challengesView.render();
 			}
 		});
 	}
