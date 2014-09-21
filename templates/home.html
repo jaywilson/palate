@@ -2,7 +2,7 @@
 
 <html>
 <head>
-	<title>Page Title</title>
+	<title>Palate</title>
 
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 
@@ -48,7 +48,9 @@
 		<div id="challengeListTemplates" style="display:none">
 			<div id="challengeItemTmp">
 				<div class='challengeImageCont'>
-					<img src='{ imageUrl }' class='challengeImage'/>
+					<a href="#challengePage" id="coverImageLink{ id }">
+						<img src='{ imageUrl }' class='challengeImage'/>
+					</a>
 					<h2 class='challengeTitle'>{ title }</h2>
 					{ tags }
 				</div>
@@ -60,17 +62,41 @@
 	</div>
 </div>
 
-<!-- Start of second page -->
 <div data-role="page" id="challengePage">
-	<div data-role="header">
-		<h1>Details</h1>
-	</div>
-
 	<div role="main" class="ui-content">
 		<div id="challengeCont"></div>
-		<input type="file" capture="camera" accept="image/*" id="takePictureField">
-		<img id="cameraImage"/>
+
+		<div id="challengeTemplates" style="display:none">
+			<div id="challengeTmp">
+				<h3 class="ui-bar ui-bar-a">{ title }</h3>
+			    <div class="ui-body">
+			        <p>{ desc }</p>
+			    </div>
+			    <div class="ui-grid-b">
+			    	{ tiles }
+				</div>
+			</div>
+			<div id="challengeTileTextTmp">
+			    <div class="ui-block-{ blockIndex }">
+			    	<div class="ui-bar ui-bar-a" style="height:60px">
+			    		<p>{ text }</p>
+			    	</div>
+			    </div>
+			</div>
+			<div id="challengeTileImgTmp">
+				<div class="ui-block-{ blockIndex }">
+			    	<div class="ui-bar ui-bar-a" style="height:60px">
+			    		<img src='{ imageUrl }'/>
+			    	</div>
+			    </div>
+			</div>
+		</div>
 	</div>
+</div>
+
+<div data-role="page" id="foo">
+	<input type="file" capture="camera" accept="image/*" id="takePictureField">
+	<img id="cameraImage"/>
 </div>
 </body>
 </html>

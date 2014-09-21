@@ -21,7 +21,9 @@ var Palate = {
 			title: "",
 			desc: "",
 			tags: [],
-			imageFile: ""
+			coverImageFile: "",
+			detailImageFiles: [],
+			countPeople: 0
 		});
 
 		this.ChallengeList = Backbone.Collection.extend({
@@ -38,7 +40,9 @@ var Palate = {
 		this.challengeItemTmp = _.template(document.querySelector("#challengeItemTmp").innerHTML);
 		this.challengeItemTagsTmp = _.template(document.querySelector("#challengeItemTagsTmp").innerHTML);
 
-		this.detailTmp = _.template("<p>{ desc }</p>");
+		this.challengeTmp = _.template(document.querySelector("#challengeTmp").innerHTML);
+		this.challengeTileTextTmp = _.template(document.querySelector("#challengeTileTextTmp").innerHTML);
+		this.challengeTileImgTmp = _.template(document.querySelector("#challengeTileImgTmp").innerHTML);
 
 		//
 		// views
@@ -63,19 +67,18 @@ var Palate = {
 					});
 
 					var data = {
+						id: attr.id,
 						title: attr.title,
-						imageUrl: 'data/img/' + attr.imageFile,
+						imageUrl: 'data/img/' + attr.coverImageFile,
 						tags: tagsHtml
 					};
 
 					var row = me.challengeItemTmp(data);
-					var $row = $(row);
+					view.$el.append(row);
 
-					$row.bind("click", function(event) {
+					$("#coverImageLink" + attr.id).bind("click", function(event) {
 						me.ListToDetail.modelClicked = element;
 					});
-
-					view.$el.append($row);
 				});
 			}
 		});
@@ -89,7 +92,33 @@ var Palate = {
 			},
 
 			render: function() {
-				this.$el.html(me.detailTmp(this.model.pick("desc")));
+				var attr = this.model.attributes;
+
+				var imgPath = "data/img/";
+
+				var tileHtml = "";
+
+				// rules
+				tileHtml += me.challengeTileTextTmp({text: 'Rules', blockIndex: 'a'});
+				// img1
+				tileHtml += me.challengeTileImgTmp({imageUrl: imgPath + attr.detailImageFiles[0], blockIndex: 'b'});
+				// count people
+				tileHtml += me.challengeTileTextTmp({text: attr.countPeople + " people", blockIndex: 'c'});
+
+				// img2
+				tileHtml += me.challengeTileImgTmp({imageUrl: imgPath + attr.detailImageFiles[1], blockIndex: 'a'});
+				// img3
+				tileHtml += me.challengeTileImgTmp({imageUrl: imgPath + attr.detailImageFiles[2], blockIndex: 'b'});
+				// recipes
+				tileHtml += me.challengeTileTextTmp({text: "Recipes", blockIndex: 'c'});
+
+				var data = {
+					title: attr.title,
+					desc: attr.desc,
+					tiles: tileHtml
+				}
+
+				this.$el.html(me.challengeTmp(data));
 			}
 		});
 
