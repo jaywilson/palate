@@ -45,7 +45,7 @@ var Palate = {
 		//
 		this.ChallengeListView = Backbone.View.extend({
 
-			el: document.getElementById("challengeListCont"),
+			el: document.querySelector("#challengeListCont"),
 
 			initialize: function() {
 				this.listenTo(this.collection, "change", this.render);
@@ -57,8 +57,8 @@ var Palate = {
 					var attr = element.attributes;
 
 					var tagsHtml = "";
-					_.each(attr.tags, function(elem) {
-						tagsHtml += me.challengeItemTagsTmp({tagName: elem});
+					_.each(attr.tags, function(elem, i) {
+						tagsHtml += me.challengeItemTagsTmp({tagName: elem, bottomPos: i * 40});
 					});
 
 					var data = {
@@ -81,7 +81,7 @@ var Palate = {
 
 		this.ChallengeView = Backbone.View.extend({
 
-			el: document.getElementById("challengeCont"),
+			el: document.querySelector("#challengeCont"),
 
 			initialize: function() {
 				this.listenTo(this.model, "change", this.render);

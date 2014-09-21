@@ -7,6 +7,10 @@
 	text-align: center;
 }
 
+#challengeListCont {
+	padding: 0px;
+}
+
 .challengeImageCont {
 	width: 300px;
 	height: 280px;
@@ -22,9 +26,20 @@
 }
 
 .challengeTitle {
-    z-index:100;
     position:absolute;    
     color:white;
+	font-weight: normal;
     left:25px;
     bottom:0px;
+}
+
+.challengeTag {
+	position:absolute;    
+    color: white;
+	font-weight: normal;
+    background-color: #2FA386;
+    text-align: right;
+    right:0px;
+    top:25px;
+	margin-top: 10px;
 }
