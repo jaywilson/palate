@@ -7,16 +7,24 @@
 	text-align: center;
 }
 
-.challengeTitle {
-	position: relative;
-	bottom: -50px;
-	left: 0;
-	width: 100%;
-	color: white;
-	padding: 10px;
+.challengeImageCont {
+	width: 300px;
+	height: 280px;
+    position: relative;
 }
 
-.challengeImage { 
-	position: relative; 
-	width: 100%; 
+.challengeImage {    
+    position:absolute;
+    left:0;
+    top:0;
+    width: 100%;
+    height: 100%;
+}
+
+.challengeTitle {
+    z-index:100;
+    position:absolute;    
+    color:white;
+    left:25px;
+    bottom:0px;
 }
