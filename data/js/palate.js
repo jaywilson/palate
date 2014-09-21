@@ -12,6 +12,8 @@ var Palate = {
 		_.templateSettings = {
 			interpolate: /\{(.+?)\}/g
 		};
+
+		this.imgPath = "data/img/";
 		
 		// 
 		// models
@@ -23,12 +25,26 @@ var Palate = {
 			tags: [],
 			coverImageFile: "",
 			detailImageFiles: [],
-			countPeople: 0
+			countPeople: 0,
+			totalPics: 0,
+			donePics: 0
 		});
 
 		this.ChallengeList = Backbone.Collection.extend({
 			model: me.Challenge,
 			url: "/challenges.json",
+			parse: function(response) {
+				return response.items;
+			}
+		});
+
+		this.Pic = Backbone.Model.extend({
+			fileName: ""
+		});
+
+		this.PicList = Backbone.Collection.extend({
+			model: me.Pic,
+			url: "/pics/<filter>/<id>/pics.json",
 			parse: function(response) {
 				return response.items;
 			}
@@ -43,6 +59,9 @@ var Palate = {
 		this.challengeTmp = _.template(document.querySelector("#challengeTmp").innerHTML);
 		this.challengeTileTextTmp = _.template(document.querySelector("#challengeTileTextTmp").innerHTML);
 		this.challengeTileImgTmp = _.template(document.querySelector("#challengeTileImgTmp").innerHTML);
+
+		this.challengeFeedTmp = _.template(document.querySelector("#challengeFeedTmp").innerHTML);
+		this.tilesTmp = _.template(document.querySelector("#tilesTmp").innerHTML);
 
 		//
 		// views
@@ -94,31 +113,93 @@ var Palate = {
 			render: function() {
 				var attr = this.model.attributes;
 
-				var imgPath = "data/img/";
-
 				var tileHtml = "";
 
 				// rules
 				tileHtml += me.challengeTileTextTmp({text: 'Rules', blockIndex: 'a'});
 				// img1
-				tileHtml += me.challengeTileImgTmp({imageUrl: imgPath + attr.detailImageFiles[0], blockIndex: 'b'});
+				tileHtml += me.challengeTileImgTmp({imageUrl: me.imgPath + attr.detailImageFiles[0], blockIndex: 'b'});
 				// count people
 				tileHtml += me.challengeTileTextTmp({text: attr.countPeople + " people", blockIndex: 'c'});
 
 				// img2
-				tileHtml += me.challengeTileImgTmp({imageUrl: imgPath + attr.detailImageFiles[1], blockIndex: 'a'});
+				tileHtml += me.challengeTileImgTmp({imageUrl: me.imgPath + attr.detailImageFiles[1], blockIndex: 'a'});
 				// img3
-				tileHtml += me.challengeTileImgTmp({imageUrl: imgPath + attr.detailImageFiles[2], blockIndex: 'b'});
+				tileHtml += me.challengeTileImgTmp({imageUrl: me.imgPath + attr.detailImageFiles[2], blockIndex: 'b'});
 				// recipes
 				tileHtml += me.challengeTileTextTmp({text: "Recipes", blockIndex: 'c'});
+
+				var content = me.tilesTmp({tiles: tileHtml});
 
 				var data = {
 					title: attr.title,
 					desc: attr.desc,
-					tiles: tileHtml
+					content: content
 				}
 
 				this.$el.html(me.challengeTmp(data));
+			}
+		});
+
+		this.ChallengeFeedView = Backbone.View.extend({
+			el: document.querySelector("#challengeFeedCont"),
+
+			initialize: function() {
+				this.listenTo(this.model, "change", this.render);
+			},
+
+			render: function() {
+				var attr = this.model.attributes;
+
+				var content = this.renderFirstTab(attr);
+
+				var data = {
+					totalPics: attr.totalPics,
+					donePics: attr.donePics,
+					content: content
+				};
+
+				this.$el.html(me.challengeFeedTmp(data));
+
+				var view = this;
+
+				$("#firstTabLink").on("click", function() {
+					$("#firstTab").html(view.renderFirstTab(attr));
+				});
+
+				$("#secondTabLink").on("click", function() {
+					$("#secondTab").html(view.renderSecondTab(attr));
+				});
+
+				$("#thirdTabLink").on("click", function() {
+					$("#thirdTab").html(view.renderThirdTab(attr));
+				});
+			},
+
+			renderFirstTab: function(attr) {
+				var picList = new me.PicList();
+				picList.url = "/pics/all/" + attr.id + "/pics.json";
+				picList.fetch({async: false});
+
+				var tileHtml = "";
+				
+				_.each(_.range(4), function() {
+					var c = 0;
+					_.each(['a', 'b', 'c'], function(el) {
+						tileHtml += me.challengeTileImgTmp({imageUrl: me.imgPath + attr.detailImageFiles[c], blockIndex: el});	
+						c += 1;
+					});
+				});
+
+				return me.tilesTmp({tiles: tileHtml});
+			},
+
+			renderSecondTab: function(attr) {
+				return this.renderFirstTab(attr);
+			},
+
+			renderThirdTab: function(attr) {
+				return this.renderFirstTab(attr); 
 			}
 		});
 
@@ -159,6 +240,9 @@ var Palate = {
 
 				var challengesView = new me.ChallengeListView({collection: challenges});
 				challengesView.render();
+			} else if (prevId == "challengePage" && toId == "challengeFeedPage") {
+				var challengeFeedView = new me.ChallengeFeedView({model: me.ListToDetail.modelClicked});
+				challengeFeedView.render();
 			}
 		});
 	}

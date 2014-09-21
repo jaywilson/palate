@@ -45,7 +45,7 @@
 	<div role="main" class="ui-content">
 		<div id="challengeListCont"></div>
 
-		<div id="challengeListTemplates" style="display:none">
+		<div id="challengeListTemplates" class="template">
 			<div id="challengeItemTmp">
 				<div class='challengeImageCont'>
 					<a href="#challengePage" id="coverImageLink{ id }">
@@ -66,13 +66,17 @@
 	<div role="main" class="ui-content">
 		<div id="challengeCont"></div>
 
-		<div id="challengeTemplates" style="display:none">
+		<div id="challengeTemplates" class="template">
 			<div id="challengeTmp">
 				<h3 class="ui-bar ui-bar-a">{ title }</h3>
 			    <div class="ui-body">
 			        <p>{ desc }</p>
+			        <a href="#challengeFeedPage" class="ui-btn">Start Challenge</a>
 			    </div>
-			    <div class="ui-grid-b">
+			    { content }
+			</div>
+			<div id="tilesTmp">
+				<div class="ui-grid-b">
 			    	{ tiles }
 				</div>
 			</div>
@@ -89,6 +93,38 @@
 			    		<img src='{ imageUrl }'/>
 			    	</div>
 			    </div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<div data-role="page" id="challengeFeedPage">
+	<div role="main" class="ui-content">
+		<div id="challengeFeedCont"></div>
+
+		<div id="challengeFeedTemplates" class="template">
+			<div id="challengeFeedTmp">
+				<form>
+					<label for="challengeProgress">Progress</label>
+					<input 	type="range" name="challengeProgress" id="challengeProgress" 
+					   		data-mini="true" min="0" max="{ totalPics }" value="{ donePics }" />
+				</form>
+				<div data-role="tabs">
+					<div data-role="navbar">
+						<ul>
+							 <li><a href="#firstTab" data-ajax="false" id="firstTabLink">All</a></li>
+							 <li><a href="#secondTab" data-ajax="false" id="secondTabLink">Mine</a></li>
+							 <li><a href="#thirdTab" data-ajax="false" id="thirdTabLink">Both</a></li>
+						</ul>
+					</div>
+					<div id="firstTab" class="ui-body-d ui-content">
+						{ content }
+					</div>
+					<div id="secondTab">
+					</div>
+					<div id="thirdTab">
+					</div>
+				</div>
 			</div>
 		</div>
 	</div>

@@ -6,6 +6,8 @@ import os
 
 app = Flask("palate", static_folder="data")
 
+challengePics = [["ch3.JPG", "ch4.JPG", "ch5.JPG"], ["ch6.JPG", "ch7.JPG", "ch8.JPG"]]
+
 @app.route("/")
 def home():
     return render_template('home.html')
@@ -14,12 +16,21 @@ def home():
 def getChallenges():
 	challenges = []
 	challenges.append({"id": 0, "title": "Meatless Mondays", "desc": "Don't eat meat on Mondays", "tags": ["Sustainable", "Fun"],
-		"coverImageFile": "ch1.JPG", "detailImageFiles": ["ch3.JPG", "ch4.JPG", "ch5.JPG"], "countPeople": 351})
+		"coverImageFile": "ch1.JPG", "detailImageFiles": challengePics[0], "countPeople": 351, "totalPicks": 3, "donePicks": 0})
 
 	challenges.append({"id": 1, "title": "Farm to Table Meal", "desc": "Cook a Farm to Table dinner", "tags": ["Wacky", "Learn"], 
-		"coverImageFile": "ch2.JPG", "detailImageFiles": ["ch6.JPG", "ch7.JPG", "ch8.JPG"], "countPeople": 562})
+		"coverImageFile": "ch2.JPG", "detailImageFiles": challengePics[1], "countPeople": 562, "totalPicks": 2, "donePicks": 0})
 	
 	return jsonify({"items": challenges})    
+
+@app.route("/pics/<filter>/<id>/pics.json")
+def getChallengePicks(filter, id):
+	pics = []
+	if (filter == 'others'):
+		pics = challengePics[id]
+	elif (filter == 'both'):
+		pics = challengePics[id]
+	return jsonify({"items": pics})		
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
