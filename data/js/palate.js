@@ -52,6 +52,7 @@ var Palate = {
 			},
 
 			render: function() {
+				this.$el.html("");
 				var view = this;
 				_.each(this.collection.models, function(element, index, list) {
 					var attr = element.attributes;
