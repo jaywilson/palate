@@ -4,7 +4,7 @@ from flask import jsonify
 
 import os
 
-app = Flask("palate")
+app = Flask("palate", static_folder="data")
 
 @app.route("/")
 def home():

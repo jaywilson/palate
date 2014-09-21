@@ -63,7 +63,7 @@ var Palate = {
 
 					var data = {
 						title: attr.title,
-						imageUrl: 'static/img/' + attr.imageFile,
+						imageUrl: 'data/img/' + attr.imageFile,
 						tags: tagsHtml
 					};
 
