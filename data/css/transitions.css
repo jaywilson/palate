@@ -1,0 +1,16 @@
+.in {
+	-webkit-animation-timing-function: ease-out;
+	-webkit-animation-duration: 50ms;
+
+	-moz-animation-timing-function: ease-out;
+	-moz-animation-duration: 50ms;
+}
+
+.out {
+	-webkit-animation-timing-function: ease-in;
+	-webkit-animation-duration: 50ms;
+
+	-moz-animation-timing-function: ease-in;
+	-moz-animation-duration: 50ms;	
+}
+

@@ -4,10 +4,13 @@
 <head>
 	<title>Palate</title>
 
-	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, minimal-ui">
+	<meta name="apple-mobile-web-app-capable" content="yes">
+	<meta name="apple-mobile-web-app-title" content="Palate">
 
 	<link rel="stylesheet" href="http://code.jquery.com/mobile/1.4.4/jquery.mobile-1.4.4.min.css" />
 	<link rel="stylesheet" href="data/css/palate.css"/>
+	<link rel="stylesheet" href="data/css/transitions.css"/>
 
 	<script src="http://code.jquery.com/jquery-2.1.0.min.js"></script>
 	<script>
@@ -32,7 +35,7 @@
 		<div id="loginCont" class="palate">
 			<h1>Palate</h1>
 			<a href="#registerPage" class="ui-btn ui-btn-inline">Sign Up</a>
-			<a href="#challengeListPage" class="ui-btn ui-btn-inline">Log In</a>
+			<a href="#challengeListPage" class="ui-btn ui-btn-inline" id="challengeListPageLink">Log In</a>
 		</div>
 	</div>
 </div>
@@ -71,7 +74,7 @@
 				<h3 class="ui-bar ui-bar-a">{ title }</h3>
 			    <div class="ui-body">
 			        <p>{ desc }</p>
-			        <a href="#challengeFeedPage" class="ui-btn">Start Challenge</a>
+			        <a href="#challengeFeedPage" class="ui-btn" id="challengeFeedLink">Start Challenge</a>
 			    </div>
 			    { content }
 			</div>
@@ -90,7 +93,7 @@
 			<div id="challengeTileImgTmp">
 				<div class="ui-block-{ blockIndex }">
 			    	<div class="ui-bar ui-bar-a" style="height:60px">
-			    		<img src='{ imageUrl }'/>
+			    		<img src='{ imageUrl }' class="tileImage"/>
 			    	</div>
 			    </div>
 			</div>
@@ -99,31 +102,34 @@
 </div>
 
 <div data-role="page" id="challengeFeedPage">
+	<div data-role="header">
+		<h1 id="feedTitle"></h1>
+	</div>
+
 	<div role="main" class="ui-content">
 		<div id="challengeFeedCont"></div>
-
-		<div id="challengeFeedTemplates" class="template">
-			<div id="challengeFeedTmp">
-				<form>
-					<label for="challengeProgress">Progress</label>
-					<input 	type="range" name="challengeProgress" id="challengeProgress" 
-					   		data-mini="true" min="0" max="{ totalPics }" value="{ donePics }" />
-				</form>
-				<div data-role="tabs">
-					<div data-role="navbar">
-						<ul>
-							 <li><a href="#firstTab" data-ajax="false" id="firstTabLink">All</a></li>
-							 <li><a href="#secondTab" data-ajax="false" id="secondTabLink">Mine</a></li>
-							 <li><a href="#thirdTab" data-ajax="false" id="thirdTabLink">Both</a></li>
-						</ul>
-					</div>
-					<div id="firstTab" class="ui-body-d ui-content">
-						{ content }
-					</div>
-					<div id="secondTab">
-					</div>
-					<div id="thirdTab">
-					</div>
+		<div id="challengeFeedTmp" class="template">
+			<form>
+				<label for="challengeProgress">Progress</label>
+				<input 	type="range" name="challengeProgress" id="challengeProgress" 
+				   		data-mini="true" min="0" max="{ totalPics }" value="{ donePics }" />
+			</form>
+			<div data-role="tabs">
+				<div data-role="navbar">
+					<ul>
+						 <li><a href="#firstTab" data-ajax="false" id="firstTabLink">All</a></li>
+						 <li><a href="#secondTab" data-ajax="false" id="secondTabLink">Mine</a></li>
+						 <li><a href="#thirdTab" data-ajax="false" id="thirdTabLink">Both</a></li>
+					</ul>
+				</div>
+				<div id="firstTab" class="ui-body-d ui-content">
+					Content
+				</div>
+				<div id="secondTab" class="ui-body-d ui-content">
+					Mine
+				</div>
+				<div id="thirdTab" class="ui-body-d ui-content">
+					Both
 				</div>
 			</div>
 		</div>

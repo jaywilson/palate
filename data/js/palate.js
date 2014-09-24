@@ -53,15 +53,25 @@ var Palate = {
 		//
 		// templates
 		//
+		// challenge list
 		this.challengeItemTmp = _.template(document.querySelector("#challengeItemTmp").innerHTML);
 		this.challengeItemTagsTmp = _.template(document.querySelector("#challengeItemTagsTmp").innerHTML);
 
+		// challenge home
 		this.challengeTmp = _.template(document.querySelector("#challengeTmp").innerHTML);
 		this.challengeTileTextTmp = _.template(document.querySelector("#challengeTileTextTmp").innerHTML);
 		this.challengeTileImgTmp = _.template(document.querySelector("#challengeTileImgTmp").innerHTML);
 
+		// challenge feed
 		this.challengeFeedTmp = _.template(document.querySelector("#challengeFeedTmp").innerHTML);
+
+		// general
+		// tiles container
 		this.tilesTmp = _.template(document.querySelector("#tilesTmp").innerHTML);
+
+		// remove the templates from the DOM 
+		// to keep things easy to reason about (duplicate ID's, document selections etc.)
+		$(".template").remove();
 
 		//
 		// views
@@ -77,8 +87,8 @@ var Palate = {
 			render: function() {
 				this.$el.html("");
 				var view = this;
-				_.each(this.collection.models, function(element, index, list) {
-					var attr = element.attributes;
+				_.each(this.collection.models, function(model, index, list) {
+					var attr = model.attributes;
 
 					var tagsHtml = "";
 					_.each(attr.tags, function(elem, i) {
@@ -96,7 +106,8 @@ var Palate = {
 					view.$el.append(row);
 
 					$("#coverImageLink" + attr.id).bind("click", function(event) {
-						me.ListToDetail.modelClicked = element;
+						var challengeView = new me.ChallengeView({model: model});
+						challengeView.render();
 					});
 				});
 			}
@@ -138,6 +149,13 @@ var Palate = {
 				}
 
 				this.$el.html(me.challengeTmp(data));
+
+				var view = this;
+
+				$("#challengeFeedLink").on("click", function() {
+					var challengeFeedView = new me.ChallengeFeedView({model: view.model});
+					challengeFeedView.render();
+				});
 			}
 		});
 
@@ -155,18 +173,21 @@ var Palate = {
 
 				var data = {
 					totalPics: attr.totalPics,
-					donePics: attr.donePics,
-					content: content
+					donePics: attr.donePics
+					// content: content
 				};
 
 				this.$el.html(me.challengeFeedTmp(data));
 
-				var view = this;
+				$("#feedTitle").html(attr.title);
 
+				var view = this;
+/*
 				$("#firstTabLink").on("click", function() {
 					$("#firstTab").html(view.renderFirstTab(attr));
 				});
 
+				
 				$("#secondTabLink").on("click", function() {
 					$("#secondTab").html(view.renderSecondTab(attr));
 				});
@@ -174,6 +195,7 @@ var Palate = {
 				$("#thirdTabLink").on("click", function() {
 					$("#thirdTab").html(view.renderThirdTab(attr));
 				});
+*/
 			},
 
 			renderFirstTab: function(attr) {
@@ -195,11 +217,11 @@ var Palate = {
 			},
 
 			renderSecondTab: function(attr) {
-				return this.renderFirstTab(attr);
+				return "Second!";
 			},
 
 			renderThirdTab: function(attr) {
-				return this.renderFirstTab(attr); 
+				return "Third!";
 			}
 		});
 
@@ -227,23 +249,12 @@ var Palate = {
 
 		var me = this;
 
-		$("body").on( "pagecontainerbeforeshow", function( event, ui ) {
-			var prevId = ui.prevPage[0].id;
-			var toId = ui.toPage[0].id;
+		$("#challengeListPageLink").on("click", function() {
+			var challenges = new me.ChallengeList();
+			challenges.fetch({"async": false});
 
-			if (prevId == "challengeListPage" && toId == "challengePage") {
-				var challengeView = new me.ChallengeView({model: me.ListToDetail.modelClicked});
-				challengeView.render();
-			} else if (prevId == "loginPage" && toId == "challengeListPage") {
-				var challenges = new me.ChallengeList();
-				challenges.fetch({"async": false});
-
-				var challengesView = new me.ChallengeListView({collection: challenges});
-				challengesView.render();
-			} else if (prevId == "challengePage" && toId == "challengeFeedPage") {
-				var challengeFeedView = new me.ChallengeFeedView({model: me.ListToDetail.modelClicked});
-				challengeFeedView.render();
-			}
+			var challengesView = new me.ChallengeListView({collection: challenges});
+			challengesView.render();	
 		});
 	}
 };
