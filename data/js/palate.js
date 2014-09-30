@@ -69,9 +69,7 @@ var Palate = {
 		// tiles container
 		this.tilesTmp = _.template(document.querySelector("#tilesTmp").innerHTML);
 
-		// remove the templates from the DOM 
-		// to keep things easy to reason about (duplicate ID's, document selections etc.)
-		$(".template").remove();
+		$("#templates").remove();
 
 		//
 		// views
@@ -106,8 +104,7 @@ var Palate = {
 					view.$el.append(row);
 
 					$("#coverImageLink" + attr.id).bind("click", function(event) {
-						var challengeView = new me.ChallengeView({model: model});
-						challengeView.render();
+						me.ListToDetail.modelClicked = model;
 					});
 				});
 			}
@@ -146,15 +143,15 @@ var Palate = {
 					title: attr.title,
 					desc: attr.desc,
 					content: content
-				}
+				};
 
 				this.$el.html(me.challengeTmp(data));
+				this.$el.trigger('create');
 
 				var view = this;
 
 				$("#challengeFeedLink").on("click", function() {
-					var challengeFeedView = new me.ChallengeFeedView({model: view.model});
-					challengeFeedView.render();
+					me.ListToDetail.modelClicked = view.model;
 				});
 			}
 		});
@@ -173,17 +170,19 @@ var Palate = {
 
 				var data = {
 					totalPics: attr.totalPics,
-					donePics: attr.donePics
-					// content: content
+					donePics: attr.donePics,
+					content: content
 				};
 
 				this.$el.html(me.challengeFeedTmp(data));
+				this.$el.trigger('create');
 
 				$("#feedTitle").html(attr.title);
 
 				var view = this;
-/*
+
 				$("#firstTabLink").on("click", function() {
+					console.log("here");
 					$("#firstTab").html(view.renderFirstTab(attr));
 				});
 
@@ -195,7 +194,6 @@ var Palate = {
 				$("#thirdTabLink").on("click", function() {
 					$("#thirdTab").html(view.renderThirdTab(attr));
 				});
-*/
 			},
 
 			renderFirstTab: function(attr) {
@@ -249,12 +247,22 @@ var Palate = {
 
 		var me = this;
 
-		$("#challengeListPageLink").on("click", function() {
+		$(document).on("pagebeforeshow", "#challengeListPage", function(event) {
 			var challenges = new me.ChallengeList();
 			challenges.fetch({"async": false});
 
 			var challengesView = new me.ChallengeListView({collection: challenges});
 			challengesView.render();	
+		});		
+
+		$(document).on('pagebeforeshow', '#challengeFeedPage', function() {
+			var view = new me.ChallengeFeedView({model: me.ListToDetail.modelClicked});
+			view.render();
+		});
+
+		$(document).on('pagebeforeshow', '#challengePage', function() {
+			var challengeView = new me.ChallengeView({model: me.ListToDetail.modelClicked});
+			challengeView.render();
 		});
 	}
 };

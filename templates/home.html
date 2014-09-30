@@ -23,11 +23,15 @@
 	<script src="data/js/underscore.js"></script>
 	<script src="data/js/backbone.js"></script>
 	<script src="data/js/palate.js"></script>
+	<script src="data/js/events.js"></script>
 </head>
 <body>
 
 <script>
-	$(function() { Palate.main() });
+	$(function() { 
+		logEvents();
+		Palate.main() 
+	});
 </script>
 
 <div data-role="page" id="loginPage">
@@ -45,59 +49,12 @@
 		<h1>Challenges</h1>
 	</div>
 
-	<div role="main" class="ui-content">
-		<div id="challengeListCont"></div>
-
-		<div id="challengeListTemplates" class="template">
-			<div id="challengeItemTmp">
-				<div class='challengeImageCont'>
-					<a href="#challengePage" id="coverImageLink{ id }">
-						<img src='{ imageUrl }' class='challengeImage'/>
-					</a>
-					<h2 class='challengeTitle'>{ title }</h2>
-					{ tags }
-				</div>
-			</div>
-			<div id="challengeItemTagsTmp">
-				<h2 class='challengeTag' style='top: { bottomPos }px;'>{ tagName }</h2>
-			</div>
-		</div>
+	<div role="main" class="ui-content" id="challengeListCont">
 	</div>
 </div>
 
 <div data-role="page" id="challengePage">
-	<div role="main" class="ui-content">
-		<div id="challengeCont"></div>
-
-		<div id="challengeTemplates" class="template">
-			<div id="challengeTmp">
-				<h3 class="ui-bar ui-bar-a">{ title }</h3>
-			    <div class="ui-body">
-			        <p>{ desc }</p>
-			        <a href="#challengeFeedPage" class="ui-btn" id="challengeFeedLink">Start Challenge</a>
-			    </div>
-			    { content }
-			</div>
-			<div id="tilesTmp">
-				<div class="ui-grid-b">
-			    	{ tiles }
-				</div>
-			</div>
-			<div id="challengeTileTextTmp">
-			    <div class="ui-block-{ blockIndex }">
-			    	<div class="ui-bar ui-bar-a" style="height:60px">
-			    		<p>{ text }</p>
-			    	</div>
-			    </div>
-			</div>
-			<div id="challengeTileImgTmp">
-				<div class="ui-block-{ blockIndex }">
-			    	<div class="ui-bar ui-bar-a" style="height:60px">
-			    		<img src='{ imageUrl }' class="tileImage"/>
-			    	</div>
-			    </div>
-			</div>
-		</div>
+	<div role="main" class="ui-content" id="challengeCont">
 	</div>
 </div>
 
@@ -106,33 +63,7 @@
 		<h1 id="feedTitle"></h1>
 	</div>
 
-	<div role="main" class="ui-content">
-		<div id="challengeFeedCont"></div>
-		<div id="challengeFeedTmp" class="template">
-			<form>
-				<label for="challengeProgress">Progress</label>
-				<input 	type="range" name="challengeProgress" id="challengeProgress" 
-				   		data-mini="true" min="0" max="{ totalPics }" value="{ donePics }" />
-			</form>
-			<div data-role="tabs">
-				<div data-role="navbar">
-					<ul>
-						 <li><a href="#firstTab" data-ajax="false" id="firstTabLink">All</a></li>
-						 <li><a href="#secondTab" data-ajax="false" id="secondTabLink">Mine</a></li>
-						 <li><a href="#thirdTab" data-ajax="false" id="thirdTabLink">Both</a></li>
-					</ul>
-				</div>
-				<div id="firstTab" class="ui-body-d ui-content">
-					Content
-				</div>
-				<div id="secondTab" class="ui-body-d ui-content">
-					Mine
-				</div>
-				<div id="thirdTab" class="ui-body-d ui-content">
-					Both
-				</div>
-			</div>
-		</div>
+	<div role="main" class="ui-content" id="challengeFeedCont">
 	</div>
 </div>
 
@@ -140,5 +71,76 @@
 	<input type="file" capture="camera" accept="image/*" id="takePictureField">
 	<img id="cameraImage"/>
 </div>
+
+<div id="templates" style="display:none">
+	<!-- CHALLENGE DETAILS -->
+	<div id="challengeTmp">
+		<h3 class="ui-bar ui-bar-a">{ title }</h3>
+	    <div class="ui-body">
+	        <p>{ desc }</p>
+	        <a href="#challengeFeedPage" class="ui-btn" id="challengeFeedLink">Start Challenge</a>
+	    </div>
+	    { content }
+	</div>
+	<div id="tilesTmp">
+		<div class="ui-grid-b">
+	    	{ tiles }
+		</div>
+	</div>
+	<div id="challengeTileTextTmp">
+	    <div class="ui-block-{ blockIndex }">
+	    	<div class="ui-bar ui-bar-a" style="height:60px">
+	    		<p>{ text }</p>
+	    	</div>
+	    </div>
+	</div>
+	<div id="challengeTileImgTmp">
+		<div class="ui-block-{ blockIndex }">
+	    	<div class="ui-bar ui-bar-a" style="height:60px">
+	    		<img src='{ imageUrl }' class="tileImage"/>
+	    	</div>
+	    </div>
+	</div>
+
+	<!-- CHALLENGE LIST -->
+	<div id="challengeItemTmp">
+		<div class='challengeImageCont'>
+			<a href="#challengePage" id="coverImageLink{ id }">
+				<img src='{ imageUrl }' class='challengeImage'/>
+			</a>
+			<h2 class='challengeTitle'>{ title }</h2>
+			{ tags }
+		</div>
+	</div>
+	<div id="challengeItemTagsTmp">
+		<h2 class='challengeTag' style='top: { bottomPos }px;'>{ tagName }</h2>
+	</div>
+
+	<!-- CHALLENGE FEED -->
+	<div id="challengeFeedTmp">
+		<form>
+			<label for="challengeProgress">Progress</label>
+			<input 	type="range" name="challengeProgress" id="challengeProgress" 
+			   		data-mini="true" min="0" max="{ totalPics }" value="{ donePics }" />
+		</form>
+		<div data-role="tabs">
+			<div data-role="navbar">
+				<ul>
+					 <li><a href="#firstTab" data-ajax="false" id="firstTabLink">All</a></li>
+					 <li><a href="#secondTab" data-ajax="false" id="secondTabLink">Mine</a></li>
+					 <li><a href="#thirdTab" data-ajax="false" id="thirdTabLink">Both</a></li>
+				</ul>
+			</div>
+			
+			<div id="firstTab" class="ui-body-d ui-content">
+				{ content }
+			</div>
+
+			<div id="secondTab" class="ui-body-d ui-content"></div>
+			<div id="thirdTab" class="ui-body-d ui-content"></div>
+		</div>
+	</div>
+</div>
+
 </body>
 </html>
