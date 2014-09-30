@@ -25,13 +25,10 @@ def getChallenges():
 
 @app.route("/pics/<filter>/<id>/pics.json")
 def getChallengePicks(filter, id):
-	pics = []
-	if (filter == 'others'):
-		pics = challengePics[id]
-	elif (filter == 'both'):
-		pics = challengePics[id]
+	pics = challengePics[int(id)]
 	return jsonify({"items": pics})		
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
+    app.debug = True
     app.run(host='0.0.0.0', port=port)

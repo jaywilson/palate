@@ -179,6 +179,15 @@ var Palate = {
 
 				$("#feedTitle").html(attr.title);
 
+				$("#takePictureField").on("change", function(event) {
+					if (event.target.files.length == 1 && event.target.files[0].type.indexOf("image/") == 0) {
+						var imageFile = event.target.files[0];
+						var imageURL = URL.createObjectURL(imageFile);
+						console.log(imageURL);
+		            	$("#cameraImage").attr("src", imageURL);
+		        	}
+				});
+
 				var view = this;
 
 				$("#firstTabLink").on("click", function() {
@@ -197,8 +206,20 @@ var Palate = {
 			},
 
 			renderFirstTab: function(attr) {
+				return this.renderImages(attr, 'all');
+			},
+
+			renderSecondTab: function(attr) {
+				return this.renderImages(attr, 'group');
+			},
+
+			renderThirdTab: function(attr) {
+				return this.renderImages(attr, 'both');
+			},
+
+			renderImages: function(attr, filter) {
 				var picList = new me.PicList();
-				picList.url = "/pics/all/" + attr.id + "/pics.json";
+				picList.url = "/pics/" + filter + "/" + attr.id + "/pics.json";
 				picList.fetch({async: false});
 
 				var tileHtml = "";
@@ -212,14 +233,6 @@ var Palate = {
 				});
 
 				return me.tilesTmp({tiles: tileHtml});
-			},
-
-			renderSecondTab: function(attr) {
-				return "Second!";
-			},
-
-			renderThirdTab: function(attr) {
-				return "Third!";
 			}
 		});
 
@@ -229,17 +242,6 @@ var Palate = {
 		this.ListToDetail = {
 			modelClicked: {}
 		};
-
-		//
-		// take pictures
-		//
-		$("#takePictureField").on("change", function(event) {
-			if (event.target.files.length == 1 && event.target.files[0].type.indexOf("image/") == 0) {
-				var imageFile = event.target.files[0];
-				var imageURL = URL.createObjectURL(imageFile);
-            	$("#cameraImage").attr("src", imageURL);
-        	}
-		});
 	},
 
 	main: function() {

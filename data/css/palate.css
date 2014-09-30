@@ -40,10 +40,10 @@
 	margin-top: 10px;
 }
 
-.tileImage {
-	width: 100%;
+.tileContainer {
+	height: 70px;
 }
 
-.template {
-	display: none;
+.tileImage {
+	width: 100%;
 }

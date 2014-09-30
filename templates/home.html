@@ -68,8 +68,7 @@
 </div>
 
 <div data-role="page" id="foo">
-	<input type="file" capture="camera" accept="image/*" id="takePictureField">
-	<img id="cameraImage"/>
+	
 </div>
 
 <div id="templates" style="display:none">
@@ -89,14 +88,14 @@
 	</div>
 	<div id="challengeTileTextTmp">
 	    <div class="ui-block-{ blockIndex }">
-	    	<div class="ui-bar ui-bar-a" style="height:60px">
+	    	<div class="ui-bar-a tileContainer">
 	    		<p>{ text }</p>
 	    	</div>
 	    </div>
 	</div>
 	<div id="challengeTileImgTmp">
 		<div class="ui-block-{ blockIndex }">
-	    	<div class="ui-bar ui-bar-a" style="height:60px">
+	    	<div class="ui-bar-a tileContainer">
 	    		<img src='{ imageUrl }' class="tileImage"/>
 	    	</div>
 	    </div>
@@ -138,6 +137,10 @@
 
 			<div id="secondTab" class="ui-body-d ui-content"></div>
 			<div id="thirdTab" class="ui-body-d ui-content"></div>
+		</div>
+		<div id="cameraControls">
+			<input type="file" capture="camera" accept="image/*" id="takePictureField">
+			<img id="cameraImage"/>
 		</div>
 	</div>
 </div>
