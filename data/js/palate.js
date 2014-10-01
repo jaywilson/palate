@@ -184,7 +184,14 @@ var Palate = {
 						var imageFile = event.target.files[0];
 						var imageURL = URL.createObjectURL(imageFile);
 						console.log(imageURL);
-		            	$("#cameraImage").attr("src", imageURL);
+						
+						var photoCanvas = document.getElementById("capturedPhoto");
+						var ctx = photoCanvas.getContext("2d");
+						var photo = new Image();
+						photo.onload = function(){
+						  ctx.drawImage(photo, 0, 0, 500, 400);
+						};
+						photo.src = imageURL;
 		        	}
 				});
 
