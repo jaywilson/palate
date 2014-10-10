@@ -14,6 +14,13 @@ var Palate = {
 		};
 
 		this.imgPath = "data/img/";
+
+		String.prototype.replaceAll = function(search, replace) {
+		    if (replace === undefined) {
+		        return this.toString();
+		    }
+		    return this.split(search).join(replace);
+		};
 		
 		// 
 		// models
@@ -171,7 +178,9 @@ var Palate = {
 				var data = {
 					totalPics: attr.totalPics,
 					donePics: attr.donePics,
-					content: content
+					content: content,
+					challengeId: attr.id,
+					stepId: attr.donePics + 1
 				};
 
 				this.$el.html(me.challengeFeedTmp(data));
@@ -179,19 +188,10 @@ var Palate = {
 
 				$("#feedTitle").html(attr.title);
 
-				$("#takePictureField").on("change", function(event) {
+				$("#userPicInput").on("change", function(event) {
 					if (event.target.files.length == 1 && event.target.files[0].type.indexOf("image/") == 0) {
 						var imageFile = event.target.files[0];
-						var imageURL = URL.createObjectURL(imageFile);
-						console.log(imageURL);
-						
-						var photoCanvas = document.getElementById("capturedPhoto");
-						var ctx = photoCanvas.getContext("2d");
-						var photo = new Image();
-						photo.onload = function(){
-						  ctx.drawImage(photo, 0, 0, 500, 400);
-						};
-						photo.src = imageURL;
+						console.log(imageFile);
 		        	}
 				});
 

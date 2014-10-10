@@ -22,7 +22,7 @@
 
 	<script src="data/js/underscore.js"></script>
 	<script src="data/js/backbone.js"></script>
-	<script src="data/js/palate.js"></script>
+	<script src="data/js/palate.js?id=656353"></script>
 	<script src="data/js/events.js"></script>
 </head>
 <body>
@@ -139,8 +139,15 @@
 			<div id="thirdTab" class="ui-body-d ui-content"></div>
 		</div>
 		<div id="cameraControls">
-			<input type="file" capture="camera" accept="image/*" id="takePictureField">
-			<canvas id="capturedPhoto" width="500" height="400"></canvas>
+			<form action="/" method="post" enctype="multipart/form-data" data-ajax="false">
+		      <p>
+		      <input type="hidden" name="userId" value="{ userId }">
+		      <input type="hidden" name="challengeId" value="{ challengeId }">
+		      <input type="hidden" name="stepId" value="{ stepId }">
+
+		      <input type="file" name="file">
+		      <input type="submit" value="Upload">
+		    </form>
 		</div>
 	</div>
 </div>
