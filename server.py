@@ -1,10 +1,15 @@
 from flask import Flask
 from flask import render_template, jsonify, request, redirect
+
 from werkzeug import secure_filename
 
-import os
+from hashlib import sha1
+
 import psycopg2
+
+import os
 import urlparse
+import time, json, base64, hmac, urllib, uuid
 
 app = Flask("palate", static_folder="data")
 app.config['UPLOAD_FOLDER'] = "data/img"
@@ -72,22 +77,44 @@ def addUserPic():
 	print str(request.files)
 	return redirect("/")
 
-@app.route("/", methods=['GET', 'POST'])
+@app.route("/upload/", methods=['GET', 'POST'])
 def upload_file():
     if request.method == 'POST':
-        file = request.files['file']
 
-        userId = request['userId']
-        challengeId = request['challengeId']
-        stepId = request['stepId']
-        if file:
-            filename = get_file_name(userId, challengeId, stepId)
-            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-            return redirect(url_for('uploaded_file',
-                                    filename=filename))	
+        userId = str(request['userId'])
+        challengeId = str(request['challengeId'])
+        stepId = str(request['stepId'])
+        url = str(request['userImageURL'])
+
+        print 'Uploaded UserId=%s challengeId=%s stepId=%s url=%s' % (userId, challengeId, stepId, url)
 
 def get_file_name(userId, challengeId, stepId):
 	return "img-" + userId + "-" + challengeId + "-" + stepId
+
+@app.route('/sign_s3/')
+def sign_s3():
+    AWS_ACCESS_KEY = os.environ.get('AWS_ACCESS_KEY_ID')
+    AWS_SECRET_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
+    S3_BUCKET = os.environ.get('S3_BUCKET_NAME')
+
+    random_uuid = uuid.uuid4()
+    object_name = 'usr-img-%s' % (random_uuid)
+    mime_type = request.args.get('s3_object_type')
+
+    expires = long(time.time()+120)
+    amz_headers = "x-amz-acl:public-read"
+
+    put_request = "PUT\n\n%s\n%d\n%s\n/%s/%s" % (mime_type, expires, amz_headers, S3_BUCKET, object_name)
+
+    signature = base64.encodestring(hmac.new(AWS_SECRET_KEY, put_request, sha1).digest())
+    signature = urllib.quote_plus(signature.strip())
+
+    url = 'https://%s.s3.amazonaws.com/%s' % (S3_BUCKET, object_name)
+
+    return json.dumps({
+        'signed_request': '%s?AWSAccessKeyId=%s&Expires=%d&Signature=%s' % (url, AWS_ACCESS_KEY, expires, signature),
+        'url': url
+    })	
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))

@@ -180,7 +180,8 @@ var Palate = {
 					donePics: attr.donePics,
 					content: content,
 					challengeId: attr.id,
-					stepId: attr.donePics + 1
+					stepId: attr.donePics + 1,
+					userId: "jay"
 				};
 
 				this.$el.html(me.challengeFeedTmp(data));
