@@ -1,277 +1,277 @@
-var Palate = {
-	init: function() {
-		var me = this;
+function Palate() {
+	var me = this;
 
-		//
-		// configuration
-		//
-		if (!("url" in window) && ("webkitURL" in window)) {
-            window.URL = window.webkitURL;   
-        }
+	//
+	// configuration
+	//
+	// override to interpolate {}
+	_.templateSettings = {
+		interpolate: /\{(.+?)\}/g
+	};
 
-		_.templateSettings = {
-			interpolate: /\{(.+?)\}/g
-		};
+	this.imgRoot = "http://s3.amazonaws.com/palate-prototype/img-"
+	
+	// 
+	// models
+	//
+	this.Challenge = Backbone.Model.extend({
+		id: 0,
+		title: "",
+		desc: "",
+		tags: [],
+		imageUuid: ""
+	});
 
-		this.imgPath = "data/img/";
+	this.Challenges = Backbone.Collection.extend({
+		model: me.Challenge,
+		url: "/challenges",
+		parse: function(response) {
+			return response.items;
+		}
+	});
 
-		String.prototype.replaceAll = function(search, replace) {
-		    if (replace === undefined) {
-		        return this.toString();
-		    }
-		    return this.split(search).join(replace);
-		};
-		
-		// 
-		// models
-		//
-		this.Challenge = Backbone.Model.extend({
-			id: 0,
-			title: "",
-			desc: "",
-			tags: [],
-			coverImageFile: "",
-			detailImageFiles: [],
-			countPeople: 0,
-			totalPics: 0,
-			donePics: 0
-		});
+	this.ChallengeHome = this.Challenge.extend({
+		urlRoot: "/home",
+		images: [],
+		userCount: 0,
+		parse: function(response) {
+			return response.attributes
+		}
+	});
 
-		this.ChallengeList = Backbone.Collection.extend({
-			model: me.Challenge,
-			url: "/challenges.json",
-			parse: function(response) {
-				return response.items;
-			}
-		});
+	this.ChallengeFeed = Backbone.Model.extend({
+		urlRoot: "/feed",
+		registrationId: 0,
+		challengeId: 0,
+		userId: 0,
+		title: "",
+		desc: "",
+		countSteps: 0,
+		currentStep: 0,
+		imageUuids: [],
+		parse: function(response) {
+			return response.attributes;
+		}
+	});
 
-		this.Pic = Backbone.Model.extend({
-			fileName: ""
-		});
+	this.Image = Backbone.Model.extend({
+		urlRoot: "/image",
+		id: 0,
+		uuid: "",
+		status: 0
+	});
 
-		this.PicList = Backbone.Collection.extend({
-			model: me.Pic,
-			url: "/pics/<filter>/<id>/pics.json",
-			parse: function(response) {
-				return response.items;
-			}
-		});
+	//
+	// templates
+	//
+	// challenge list
+	this.challengeItemTmp = _.template(document.querySelector("#challengeItemTmp").innerHTML);
+	this.challengeItemTagsTmp = _.template(document.querySelector("#challengeItemTagsTmp").innerHTML);
 
-		//
-		// templates
-		//
-		// challenge list
-		this.challengeItemTmp = _.template(document.querySelector("#challengeItemTmp").innerHTML);
-		this.challengeItemTagsTmp = _.template(document.querySelector("#challengeItemTagsTmp").innerHTML);
+	// challenge home
+	this.challengeTmp = _.template(document.querySelector("#challengeTmp").innerHTML);
+	this.challengeTileTextTmp = _.template(document.querySelector("#challengeTileTextTmp").innerHTML);
+	this.challengeTileImgTmp = _.template(document.querySelector("#challengeTileImgTmp").innerHTML);
 
-		// challenge home
-		this.challengeTmp = _.template(document.querySelector("#challengeTmp").innerHTML);
-		this.challengeTileTextTmp = _.template(document.querySelector("#challengeTileTextTmp").innerHTML);
-		this.challengeTileImgTmp = _.template(document.querySelector("#challengeTileImgTmp").innerHTML);
+	// challenge feed
+	this.challengeFeedTmp = _.template(document.querySelector("#challengeFeedTmp").innerHTML);
 
-		// challenge feed
-		this.challengeFeedTmp = _.template(document.querySelector("#challengeFeedTmp").innerHTML);
+	// general
+	// tiles container
+	this.tilesTmp = _.template(document.querySelector("#tilesTmp").innerHTML);
 
-		// general
-		// tiles container
-		this.tilesTmp = _.template(document.querySelector("#tilesTmp").innerHTML);
+	$("#templates").remove();
 
-		$("#templates").remove();
+	//
+	// views
+	//
+	this.ChallengeListView = Backbone.View.extend({
 
-		//
-		// views
-		//
-		this.ChallengeListView = Backbone.View.extend({
+		el: document.querySelector("#challengeListCont"),
 
-			el: document.querySelector("#challengeListCont"),
+		initialize: function() {
+			this.listenTo(this.collection, "change", this.render);
+		},
 
-			initialize: function() {
-				this.listenTo(this.collection, "change", this.render);
-			},
+		render: function() {
+			this.$el.html("");
+			var view = this;
+			_.each(this.collection.models, function(model, index, list) {
+				var attr = model.attributes;
 
-			render: function() {
-				this.$el.html("");
-				var view = this;
-				_.each(this.collection.models, function(model, index, list) {
-					var attr = model.attributes;
-
-					var tagsHtml = "";
-					_.each(attr.tags, function(elem, i) {
-						tagsHtml += me.challengeItemTagsTmp({tagName: elem, bottomPos: i * 40});
-					});
-
-					var data = {
-						id: attr.id,
-						title: attr.title,
-						imageUrl: 'data/img/' + attr.coverImageFile,
-						tags: tagsHtml
-					};
-
-					var row = me.challengeItemTmp(data);
-					view.$el.append(row);
-
-					$("#coverImageLink" + attr.id).bind("click", function(event) {
-						me.ListToDetail.modelClicked = model;
-					});
+				var tagsHtml = "";
+				_.each(attr.tags, function(elem, i) {
+					tagsHtml += me.challengeItemTagsTmp({tagName: elem, bottomPos: i * 40});
 				});
-			}
-		});
-
-		this.ChallengeView = Backbone.View.extend({
-
-			el: document.querySelector("#challengeCont"),
-
-			initialize: function() {
-				this.listenTo(this.model, "change", this.render);
-			},
-
-			render: function() {
-				var attr = this.model.attributes;
-
-				var tileHtml = "";
-
-				// rules
-				tileHtml += me.challengeTileTextTmp({text: 'Rules', blockIndex: 'a'});
-				// img1
-				tileHtml += me.challengeTileImgTmp({imageUrl: me.imgPath + attr.detailImageFiles[0], blockIndex: 'b'});
-				// count people
-				tileHtml += me.challengeTileTextTmp({text: attr.countPeople + " people", blockIndex: 'c'});
-
-				// img2
-				tileHtml += me.challengeTileImgTmp({imageUrl: me.imgPath + attr.detailImageFiles[1], blockIndex: 'a'});
-				// img3
-				tileHtml += me.challengeTileImgTmp({imageUrl: me.imgPath + attr.detailImageFiles[2], blockIndex: 'b'});
-				// recipes
-				tileHtml += me.challengeTileTextTmp({text: "Recipes", blockIndex: 'c'});
-
-				var content = me.tilesTmp({tiles: tileHtml});
 
 				var data = {
+					id: attr.id,
 					title: attr.title,
-					desc: attr.desc,
-					content: content
+					imageUrl: me.imgRoot + attr.imageUuid,
+					tags: tagsHtml
 				};
 
-				this.$el.html(me.challengeTmp(data));
-				this.$el.trigger('create');
+				var row = me.challengeItemTmp(data);
+				view.$el.append(row);
 
-				var view = this;
-
-				$("#challengeFeedLink").on("click", function() {
-					me.ListToDetail.modelClicked = view.model;
+				$("#coverImageLink" + attr.id).bind("click", function(event) {
+					me.ListToDetail.modelClicked = model;
 				});
-			}
-		});
+			});
+		}
+	});
 
-		this.ChallengeFeedView = Backbone.View.extend({
-			el: document.querySelector("#challengeFeedCont"),
+	this.ChallengeView = Backbone.View.extend({
 
-			initialize: function() {
-				this.listenTo(this.model, "change", this.render);
-			},
+		el: document.querySelector("#challengeCont"),
 
-			render: function() {
-				var attr = this.model.attributes;
+		initialize: function() {
+			this.listenTo(this.model, "change", this.render);
+		},
 
-				var content = this.renderFirstTab(attr);
+		render: function() {
+			var attr = this.model.attributes;
 
-				var data = {
-					totalPics: attr.totalPics,
-					donePics: attr.donePics,
-					content: content,
-					challengeId: attr.id,
-					stepId: attr.donePics + 1,
-					userId: "jay"
-				};
+			var tileHtml = "";
 
-				this.$el.html(me.challengeFeedTmp(data));
-				this.$el.trigger('create');
+			// rules
+			tileHtml += me.challengeTileTextTmp({text: 'Rules', blockIndex: 'a'});
+			// img1
+			tileHtml += me.challengeTileImgTmp({imageUrl: me.imgRoot + attr.imageUuids[0], blockIndex: 'b'});
+			// count people
+			tileHtml += me.challengeTileTextTmp({text: attr.userCount + " people", blockIndex: 'c'});
 
-				$("#feedTitle").html(attr.title);
+			// img2
+			tileHtml += me.challengeTileImgTmp({imageUrl: me.imgRoot + attr.imageUuids[1], blockIndex: 'a'});
+			// img3
+			tileHtml += me.challengeTileImgTmp({imageUrl: me.imgRoot + attr.imageUuids[2], blockIndex: 'b'});
+			// recipes
+			tileHtml += me.challengeTileTextTmp({text: "Recipes", blockIndex: 'c'});
 
-				$("#userPicInput").on("change", function(event) {
-					if (event.target.files.length == 1 && event.target.files[0].type.indexOf("image/") == 0) {
-						var imageFile = event.target.files[0];
-						console.log(imageFile);
-		        	}
-				});
+			var content = me.tilesTmp({tiles: tileHtml});
 
-				var view = this;
+			var data = {
+				title: attr.title,
+				desc: attr.desc,
+				content: content
+			};
 
-				$("#firstTabLink").on("click", function() {
-					console.log("here");
-					$("#firstTab").html(view.renderFirstTab(attr));
-				});
+			this.$el.html(me.challengeTmp(data));
+			this.$el.trigger('create');
 
-				
-				$("#secondTabLink").on("click", function() {
-					$("#secondTab").html(view.renderSecondTab(attr));
-				});
+			var view = this;
 
-				$("#thirdTabLink").on("click", function() {
-					$("#thirdTab").html(view.renderThirdTab(attr));
-				});
-			},
+			$("#challengeFeedLink").on("click", function() {
+				me.ListToDetail.modelClicked = view.model;
+			});
+		}
+	});
 
-			renderFirstTab: function(attr) {
-				return this.renderImages(attr, 'all');
-			},
+	this.ChallengeFeedView = Backbone.View.extend({
+		el: document.querySelector("#challengeFeedCont"),
 
-			renderSecondTab: function(attr) {
-				return this.renderImages(attr, 'group');
-			},
+		initialize: function() {
+			this.listenTo(this.model, "change", this.render);
+		},
 
-			renderThirdTab: function(attr) {
-				return this.renderImages(attr, 'both');
-			},
+		render: function() {
+			var attr = this.model.attributes;
 
-			renderImages: function(attr, filter) {
-				var picList = new me.PicList();
-				picList.url = "/pics/" + filter + "/" + attr.id + "/pics.json";
-				picList.fetch({async: false});
+			var content = this.renderFirstTab(attr);
 
-				var tileHtml = "";
-				
-				_.each(_.range(4), function() {
-					var c = 0;
-					_.each(['a', 'b', 'c'], function(el) {
-						tileHtml += me.challengeTileImgTmp({imageUrl: me.imgPath + attr.detailImageFiles[c], blockIndex: el});	
-						c += 1;
-					});
-				});
+			var data = {
+				countSteps: attr.countSteps,
+				currentStep: attr.currentStep,
+				content: content,
+				challengeId: attr.id,
+				userId: 0
+			};
 
-				return me.tilesTmp({tiles: tileHtml});
-			}
-		});
+			this.$el.html(me.challengeFeedTmp(data));
+			this.$el.trigger('create');
 
-		//
-		// transitions
-		//
-		this.ListToDetail = {
-			modelClicked: {}
-		};
-	},
+			$("#feedTitle").html(attr.title);
 
-	main: function() {
-		this.init();
+			var view = this;
 
+			$("#firstTabLink").on("click", function() {
+				$("#firstTab").html(view.renderFirstTab(attr));
+			});
+
+			
+			$("#secondTabLink").on("click", function() {
+				$("#secondTab").html(view.renderSecondTab(attr));
+			});
+
+			$("#thirdTabLink").on("click", function() {
+				$("#thirdTab").html(view.renderThirdTab(attr));
+			});
+		},
+
+		renderFirstTab: function(attr) {
+			return this.renderImages(attr, 'all');
+		},
+
+		renderSecondTab: function(attr) {
+			return this.renderImages(attr, 'group');
+		},
+
+		renderThirdTab: function(attr) {
+			return this.renderImages(attr, 'both');
+		},
+
+		renderImages: function(attr, filter) {
+			var tileHtml = "";
+			
+			blocks = ['a', 'b', 'c']
+			_.each(attr.imageUuids, function(uuid, i) {
+				tileHtml += me.challengeTileImgTmp({imageUrl: me.imgRoot + uuid, blockIndex: blocks[i % 3]});
+			});
+
+			return me.tilesTmp({tiles: tileHtml});
+		}
+	});
+
+	//
+	// transitions
+	//
+	this.ListToDetail = {
+		modelClicked: {}
+	};
+
+	this.main = function() {
 		var me = this;
 
 		$(document).on("pagebeforeshow", "#challengeListPage", function(event) {
-			var challenges = new me.ChallengeList();
+			var challenges = new me.Challenges();
 			challenges.fetch({"async": false});
 
 			var challengesView = new me.ChallengeListView({collection: challenges});
 			challengesView.render();	
 		});		
 
-		$(document).on('pagebeforeshow', '#challengeFeedPage', function() {
-			var view = new me.ChallengeFeedView({model: me.ListToDetail.modelClicked});
+		$(document).on('pagebeforeshow', '#challengeFeedPage', function(event, ui) {
+			var attr = me.ListToDetail.modelClicked.attributes;
+
+			// check for transition from challenge home; indicates feed should be created
+			if (ui.prevPage[0].id === "challengeHome") {
+				var feed = new me.ChallengeFeed({userId: 0, challengeId: attr.id});
+				feed.save();
+			} else {
+				var feed = new me.ChallengeFeed({id: attr.id});
+				feed.fetch({"async": false});	
+			}
+
+			var view = new me.ChallengeFeedView({model: feed});
 			view.render();
 		});
 
-		$(document).on('pagebeforeshow', '#challengePage', function() {
-			var challengeView = new me.ChallengeView({model: me.ListToDetail.modelClicked});
+		$(document).on('pagebeforeshow', '#challengeHome', function() {
+			attr = me.ListToDetail.modelClicked.attributes;
+			home = new me.ChallengeHome({id: attr.id});
+			home.fetch({"async": false});
+
+			var challengeView = new me.ChallengeView({model: home});
 			challengeView.render();
 		});
 	}

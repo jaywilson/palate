@@ -5,91 +5,110 @@ from werkzeug import secure_filename
 
 from hashlib import sha1
 
-import psycopg2
+from palate import Palate
 
 import os
-import urlparse
-import time, json, base64, hmac, urllib, uuid
+import time, base64, hmac, urllib, uuid
 
 app = Flask("palate", static_folder="data")
-app.config['UPLOAD_FOLDER'] = "data/img"
 
-challengePics = [["ch3.JPG", "ch4.JPG", "ch5.JPG"], ["ch6.JPG", "ch7.JPG", "ch8.JPG"]]
-
-urlparse.uses_netloc.append("postgres")
-url = urlparse.urlparse(os.environ["DATABASE_URL"])
-
-conn = psycopg2.connect(
-    database=url.path[1:],
-    user=url.username,
-    password=url.password,
-    host=url.hostname,
-    port=url.port
-)
-
-def testDb():
-	# Open a cursor to perform database operations
-	cur = conn.cursor()
-
-	print "hello!"
-
-	# Execute a command: this creates a new table
-	cur.execute("CREATE TABLE IF NOT EXISTS test (id serial PRIMARY KEY, num integer, data varchar);")
-
-	# Pass data to fill a query placeholders and let Psycopg perform
-	# the correct conversion (no more SQL injections!)
-	cur.execute("INSERT INTO test (num, data) VALUES (%s, %s)", (100, "abc'def"))
-
-	# Query the database and obtain data as Python objects
-	cur.execute("SELECT * FROM test;")
-	result = cur.fetchone()
-	print str(result)
-
-	# Make the changes to the database persistent
-	conn.commit()
-
-	# Close communication with the database
-	cur.close()
-	conn.close()
+palate = Palate()
+palate.createSchema()
+palate.insertData()
 
 @app.route("/")
 def home():
     return render_template('home.html')
 
-@app.route("/challenges.json")
+@app.route("/challenges")
 def getChallenges():
-	challenges = []
-	challenges.append({"id": 0, "title": "Meatless Mondays", "desc": "Don't eat meat on Mondays", "tags": ["Sustainable", "Fun"],
-		"coverImageFile": "ch1.JPG", "detailImageFiles": challengePics[0], "countPeople": 351, "totalPics": 3, "donePics": 0})
+    dbChallenges = palate.getChallenges()
 
-	challenges.append({"id": 1, "title": "Farm to Table Meal", "desc": "Cook a Farm to Table dinner", "tags": ["Wacky", "Learn"], 
-		"coverImageFile": "ch2.JPG", "detailImageFiles": challengePics[1], "countPeople": 562, "totalPics": 2, "donePics": 0})
+    items = []
+    for ch in dbChallenges:
+        dbTags = palate.getChallengeTags(ch[0])
+
+        tagItems = []
+        for tag in dbTags:
+            tagItems.append(tag[1])
+
+    	items.append({
+            "id": ch[0], 
+            "title": ch[1], 
+            "desc": ch[2], 
+            "tags": tagItems,
+    		"imageUuid": ch[3]
+        })
 	
-	return jsonify({"items": challenges})    
+    return jsonify({"items": items})    
 
-@app.route("/pics/<filter>/<id>/pics.json")
-def getChallengePicks(filter, id):
-	pics = challengePics[int(id)]
-	return jsonify({"items": pics})	
+@app.route("/home/<challengeId>")
+def getChallengeHome(challengeId):
+    userCount = palate.getChallengeUserCount(challengeId)[0][0]    
+    imageUuids = palate.getChallengeImages(challengeId)
+    challenge = palate.getChallenge(challengeId)[0]
 
-@app.route("/addUserPic/", methods=["GET", "POST"])
-def addUserPic():
-	print str(request.files)
-	return redirect("/")
+    flatUuids = []
+    for uuid in imageUuids:
+        flatUuids.append(uuid[0])
 
-@app.route("/upload/", methods=['GET', 'POST'])
-def upload_file():
+    attr = {
+        "id": challenge[0],
+        "title": challenge[1],
+        "desc": challenge[2],
+        "userCount": userCount, 
+        "imageUuids": flatUuids
+    }
+
+    return jsonify({"attributes": attr})    
+
+# TODO determine how to fetch using multiple ID's,
+# or the whole model object as form encoded like save
+# or first create a feed using save and passing the Feed model <-- yes
+@app.route("/feed", methods=["POST", "PUT"])
+def saveChallengeFeed():
     if request.method == 'POST':
+        feedModel = request.get_json()
 
-        userId = str(request['userId'])
-        challengeId = str(request['challengeId'])
-        stepId = str(request['stepId'])
-        url = str(request['userImageURL'])
+        userId = feedModel['userId']
+        challengeId = feedModel['challengeId']
 
-        print 'Uploaded UserId=%s challengeId=%s stepId=%s url=%s' % (userId, challengeId, stepId, url)
+        registrationId = palate.createRegistration(userId, challengeId);
 
-def get_file_name(userId, challengeId, stepId):
-	return "img-" + userId + "-" + challengeId + "-" + stepId
+        challenge = palate.getChallenge(challengeId)[0]
+
+        print "challenge: " + str(challenge)
+
+        imageUuids = palate.getChallengeImages(challengeId)
+
+        print "imageUuids: " + str(imageUuids)
+
+        currentStep = palate.getCurrentStep(userId, challengeId)
+
+        print "currentStep: " + str(currentStep)
+
+        flatUuids = []
+        for uuid in imageUuids:
+            flatUuids.append(uuid[0])
+
+        attr = {
+            "registrationId": registrationId,
+            "challengeId": challenge[0],
+            "userId": userId,
+            "title": challenge[1],
+            "desc": challenge[2],
+            "countSteps": challenge[3],
+            "currentStep": currentStep,
+            "imageUuids": flatUuids
+        }
+
+        print "Attr: " + str(attr)
+
+        return jsonify({"attributes": attr})
+
+@app.route("/feed/<registrationId>", methods=["GET"])
+def getChallengeFeed(registrationId):
+    pass
 
 @app.route('/sign_s3/')
 def sign_s3():
@@ -97,28 +116,44 @@ def sign_s3():
     AWS_SECRET_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
     S3_BUCKET = os.environ.get('S3_BUCKET_NAME')
 
-    random_uuid = uuid.uuid4()
-    object_name = 'usr-img-%s' % (random_uuid)
-    mime_type = request.args.get('s3_object_type')
+    mimeType = request.args.get('s3_object_type')
+    imageUuid = request.args.get('s3_object_name')
+    objectName = 'img-%' % (imageUuid)
 
     expires = long(time.time()+120)
-    amz_headers = "x-amz-acl:public-read"
+    amzHeaders = "x-amz-acl:public-read"
 
-    put_request = "PUT\n\n%s\n%d\n%s\n/%s/%s" % (mime_type, expires, amz_headers, S3_BUCKET, object_name)
+    putRequest = "PUT\n\n%s\n%d\n%s\n/%s/%s" % (mimeType, expires, amzHeaders, S3_BUCKET, objectName)
 
-    signature = base64.encodestring(hmac.new(AWS_SECRET_KEY, put_request, sha1).digest())
+    signature = base64.encodestring(hmac.new(AWS_SECRET_KEY, putRequest, sha1).digest())
     signature = urllib.quote_plus(signature.strip())
 
     url = 'https://%s.s3.amazonaws.com/%s' % (S3_BUCKET, object_name)
 
-    return json.dumps({
+    return jsonify({
         'signed_request': '%s?AWSAccessKeyId=%s&Expires=%d&Signature=%s' % (url, AWS_ACCESS_KEY, expires, signature),
         'url': url
-    })	
+    })
+
+@app.route("/image", methods=['POST', 'PUT'])
+def createImage():
+    # create
+    if request.method == 'POST':
+        uuid = palate.createImage()
+        return jsonify({"uuid": uuid})    
+    # update    
+    elif request.method == 'PUT':
+        pass
+
+@app.route("/progress", methods=['POST', 'PUT'])
+def saveChallengeUserProgress():
+    pass
+
+def saveImage(userId, imageId):    
+    pass
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.debug = True
-    testDb()
     app.run(host='0.0.0.0', port=port)
     
