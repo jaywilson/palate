@@ -54,11 +54,21 @@ function Palate() {
 		}
 	});
 
+	this.ChallengeUserProgress = Backbone.Model.extend({
+		urlRoot: "/progress",
+		challengeId: 0,
+		userId: 0,
+		imageUuid: ""
+	});
+
 	this.Image = Backbone.Model.extend({
 		urlRoot: "/image",
 		id: 0,
 		uuid: "",
-		status: 0
+		status: 0,
+		parse: function(response) {
+			return response.attributes;
+		}
 	});
 
 	//
@@ -183,7 +193,7 @@ function Palate() {
 				countSteps: attr.countSteps,
 				currentStep: attr.currentStep,
 				content: content,
-				challengeId: attr.id,
+				challengeId: attr.challengeId,
 				userId: 0
 			};
 
@@ -255,7 +265,11 @@ function Palate() {
 
 			// check for transition from challenge home; indicates feed should be created
 			if (ui.prevPage[0].id === "challengeHome") {
-				var feed = new me.ChallengeFeed({userId: 0, challengeId: attr.id});
+				var feed = new me.ChallengeFeed({
+					userId: 0, 
+					challengeId: attr.id
+				});
+
 				feed.save();
 			} else {
 				var feed = new me.ChallengeFeed({id: attr.id});

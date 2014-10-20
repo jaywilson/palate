@@ -118,7 +118,9 @@ def sign_s3():
 
     mimeType = request.args.get('s3_object_type')
     imageUuid = request.args.get('s3_object_name')
-    objectName = 'img-%' % (imageUuid)
+    objectName = 'img-%s' % (imageUuid)
+
+    print "Image UUID: " + str(imageUuid)
 
     expires = long(time.time()+120)
     amzHeaders = "x-amz-acl:public-read"
@@ -128,7 +130,7 @@ def sign_s3():
     signature = base64.encodestring(hmac.new(AWS_SECRET_KEY, putRequest, sha1).digest())
     signature = urllib.quote_plus(signature.strip())
 
-    url = 'https://%s.s3.amazonaws.com/%s' % (S3_BUCKET, object_name)
+    url = 'https://%s.s3.amazonaws.com/%s' % (S3_BUCKET, objectName)
 
     return jsonify({
         'signed_request': '%s?AWSAccessKeyId=%s&Expires=%d&Signature=%s' % (url, AWS_ACCESS_KEY, expires, signature),
@@ -140,14 +142,23 @@ def createImage():
     # create
     if request.method == 'POST':
         uuid = palate.createImage()
-        return jsonify({"uuid": uuid})    
+        return jsonify({"attributes": { "uuid": uuid }})    
     # update    
     elif request.method == 'PUT':
         pass
 
 @app.route("/progress", methods=['POST', 'PUT'])
 def saveChallengeUserProgress():
-    pass
+    if request.method == 'POST':
+        progressModel = request.get_json()
+
+        userId = progressModel['userId']
+        challengeId = progressModel['challengeId']
+        imageUuid = progressModel['imageUuid']
+
+        palate.saveChallengeUserProgress(userId, challengeId, imageUuid)
+
+        return jsonify({"attributes": progressModel})
 
 def saveImage(userId, imageId):    
     pass

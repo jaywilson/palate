@@ -40,7 +40,7 @@ class Palate:
         return self.query("select uuid from image i join challengeUserProgress p on p.imageId = i.id join challengeStep s on s.id = p.stepId where s.challengeId = %s;" % (challengeId))
 
     def getCurrentStep(self, userId, challengeId):
-        results = self.query("select currentStepSequence from challengeRegistration where userId = %s and challengeId = %s" % (userId, challengeId))
+        results = self.query("select currentStepSequence from challengeRegistration where userId = %s and challengeId = %s;" % (userId, challengeId))
         return results[0][0]
 
     def getRegistration(self, registrationId):
@@ -64,10 +64,13 @@ class Palate:
     def saveChallengeUserProgress(self, userId, challengeId, imageUuid):
         cur = self.conn.cursor()        
 
-        cur.execute("select id from image where uuid = %;" % (imageUuid))
+        cur.execute("select id from image where uuid = '%s';" % (imageUuid))
         imageId = cur.fetchone()[0]
 
-        cur.execute("insert into challengeUserProgress (userId, stepId, imageId) values (%s, %s, %s);" % (userId, stepId, imageId))
+        cur.execute("select s.id from challengeRegistration r join challengeStep s on s.sequence = r.currentstepsequence + 1 and s.challengeId = r.challengeId where s.challengeId = %s;" % (challengeId))
+        stepId = cur.fetchone()[0]
+
+        cur.execute("insert into challengeUserProgress (userId, challengeId, stepId, imageId) values (%s, %s, %s, %s);" % (userId, challengeId, stepId, imageId))
         self.commit(cur)
 
     def query(self, sql):
