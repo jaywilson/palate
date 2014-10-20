@@ -16,12 +16,12 @@ class Palate:
 
     def createSchema(self):
         cur = self.conn.cursor()
-        cur.execute(open("palate.sql", "r").read())    
+        cur.execute(open("sql/palate.sql", "r").read())    
         self.commit(cur)
 
     def insertData(self):
         cur = self.conn.cursor()
-        cur.execute(open("data.sql", "r").read())
+        cur.execute(open("sql/data.sql", "r").read())
         self.commit(cur)
 
     def getChallenges(self):
