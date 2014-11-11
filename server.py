@@ -1,8 +1,5 @@
 from flask import Flask
 from flask import render_template, jsonify, request, redirect
-
-from werkzeug import secure_filename
-
 from hashlib import sha1
 
 from palate import Palate
@@ -10,7 +7,7 @@ from palate import Palate
 import os
 import time, base64, hmac, urllib, uuid
 
-app = Flask("palate", static_folder="data")
+app = Flask(__name__, static_folder="data")
 
 palate = Palate()
 palate.createSchema()
@@ -40,14 +37,29 @@ def getChallenges():
     		"imageUuid": ch[3]
         })
 	
+    return jsonify({"items": items})
+
+@app.route("/challenges/<userId>")
+def getUserChallenges(userId):
+    dbChallenges = palate.getUserChallenges(userId)
+
+    items = []
+    for ch in dbChallenges:
+        items.append({
+            "id": ch[0],
+            "title": ch[1],
+            "desc": ch[2]
+        })
+
     return jsonify({"items": items})    
+
 
 @app.route("/home/<challengeId>")
 def getChallengeHome(challengeId):
     userCount = palate.getChallengeUserCount(challengeId)[0][0]    
     imageUuids = palate.getChallengeImages(challengeId)
     challenge = palate.getChallenge(challengeId)[0]
-
+    
     flatUuids = []
     for uuid in imageUuids:
         flatUuids.append(uuid[0])
@@ -62,9 +74,6 @@ def getChallengeHome(challengeId):
 
     return jsonify({"attributes": attr})    
 
-# TODO determine how to fetch using multiple ID's,
-# or the whole model object as form encoded like save
-# or first create a feed using save and passing the Feed model <-- yes
 @app.route("/feed", methods=["POST", "PUT"])
 def saveChallengeFeed():
     if request.method == 'POST':
@@ -154,9 +163,13 @@ def saveChallengeUserProgress():
 
         userId = progressModel['userId']
         challengeId = progressModel['challengeId']
+        currentStepSequence = progressModel['currentStepSequence']
         imageUuid = progressModel['imageUuid']
 
+        completedStepSequence = currentStepSequence + 1
+
         palate.saveChallengeUserProgress(userId, challengeId, imageUuid)
+        palate.updateCurrentStep(userId, challengeId, completedStepSequence)
 
         return jsonify({"attributes": progressModel})
 

@@ -9,29 +9,35 @@
 	<meta name="apple-mobile-web-app-title" content="Palate">
 
 	<link rel="stylesheet" href="http://code.jquery.com/mobile/1.4.4/jquery.mobile-1.4.4.min.css" />
-	<link rel="stylesheet" href="data/css/palate.css"/>
-	<link rel="stylesheet" href="data/css/transitions.css"/>
+    <!-- <link rel="stylesheet" href="data/jquery.mobile-1.4.4/jquery.mobile-1.4.4.min.css" /> -->
+    <link rel="stylesheet" href="data/css/palate.css"/>
+    <link rel="stylesheet" href="data/css/transitions.css"/>
 
-	<script src="http://code.jquery.com/jquery-2.1.0.min.js"></script>
-	<script>
-		$(document).on( "mobileinit", function() {
-		  $.mobile.defaultPageTransition = "pop";
-		});
-	</script>
-	<script src="http://code.jquery.com/mobile/1.4.4/jquery.mobile-1.4.4.min.js"></script>
+    <script src="http://code.jquery.com/jquery-2.1.0.min.js"></script>
+	<!--  <script src="data/js/jquery-2.1.1.min.js"></script> -->
+    
+    <script>
+        $(document).on( "mobileinit", function() {
+          $.mobile.defaultPageTransition = "pop";
+        });
+    </script>
+
+    <script src="http://code.jquery.com/mobile/1.4.4/jquery.mobile-1.4.4.min.js"></script>
+    <!-- <script src="data/jquery.mobile-1.4.4/jquery.mobile-1.4.4.js"></script> -->
 
 	<script src="data/js/underscore.js"></script>
 	<script src="data/js/backbone.js"></script>
 	<script src="data/js/s3upload.js"></script>
 	<script src="data/js/palate.js?id=453534"></script>
 	<script src="data/js/events.js"></script>
-	<script src="data/js/imageHandler.js"></script>
 </head>
 <body>
 
 <script>
 	$(function() { 
 		logEvents();
+
+		// attach to window for debugging
 		window.palate = new Palate();
 		window.palate.main();
 	});
@@ -67,6 +73,11 @@
 	</div>
 
 	<div role="main" class="ui-content" id="challengeFeedCont">
+	</div>
+</div>
+
+<div data-role="page" id="captionPage">
+	<div role="main" class="ui-content" id="captionCont">
 	</div>
 </div>
 
@@ -138,12 +149,27 @@
 			<div id="thirdTab" class="ui-body-d ui-content"></div>
 		</div>
 		<div id="cameraControls">
-			<input type="file" name="file" accept="image/*" capture="camera" id="file" onchange="ImageHandler.completeStep();">
+			<input type="file" name="file" accept="image/*" capture="camera" id="file" onchange="palate.completeStep();">
 			<input type="hidden" name="userId" id="userId" value="{ userId }">
 		    <input type="hidden" name="challengeId" id="feedChallengeId" value="{ challengeId }">
-		    <p id="status">
-		    <div id="preview"></div>
 		</div>
+	</div>
+
+	<!-- CAPTION -->
+	<div id="captionTmp">
+		<img src='{ imageUrl }' class='challengeImage' id='captionImage' style="width: 100px;"/>
+		<p id="imageUploadStatus">
+		<input type="text" id="captionText" />
+		<form>
+			<fieldset>
+				<legend>My Challenges</legend>
+				{ userChallengeList }
+			</fieldset>
+		</form>
+	</div>
+	<div id="challengeCheckListTmp">
+		<input type="checkbox" id="{ checkBoxId }" />
+		<label for="{ checkBoxId }" >{ title }</label>
 	</div>
 </div>
 

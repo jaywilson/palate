@@ -27,6 +27,9 @@ class Palate:
     def getChallenges(self):
         return self.query("select c.id, c.title, c.description, i.uuid from challenge c join image i on i.id = c.imageId;")
 
+    def getUserChallenges(self, userId):
+        return self.query("select c.id, c.title, c.description, c.countSteps from challengeRegistration r join challenge c on c.id = r.challengeId where r.userId = %s;" % (userId))    
+
     def getChallenge(self, challengeId):
         return self.query("select id, title, description, countSteps from challenge where id = %s;" % (challengeId))    
 
@@ -43,15 +46,16 @@ class Palate:
         results = self.query("select currentStepSequence from challengeRegistration where userId = %s and challengeId = %s;" % (userId, challengeId))
         return results[0][0]
 
+    def updateCurrentStep(self, userId, challengeId, currentStepSequence):
+        self.execute("update challengeRegistration set currentStepSequence = %s where userId = %s and challengeId = %s" % (currentStepSequence, userId, challengeId))    
+
     def getRegistration(self, registrationId):
         results = self.query("select challengeId, userId from challengeRegistration where registrationId = %s" % (registrationId))    
         return results[0]
 
     def createImage(self):
         randomUuid = uuid.uuid4()    
-        cur = self.conn.cursor()
-        cur.execute("insert into image (uuid, status) values ('%s', 0);" % (randomUuid))
-        self.commit(cur)      
+        self.execute("insert into image (uuid, status) values ('%s', 0);" % (randomUuid))   
         return randomUuid   
 
     def createRegistration(self, userId, challengeId):
@@ -72,6 +76,11 @@ class Palate:
 
         cur.execute("insert into challengeUserProgress (userId, challengeId, stepId, imageId) values (%s, %s, %s, %s);" % (userId, challengeId, stepId, imageId))
         self.commit(cur)
+
+    def execute(self, sql):
+        cur = self.conn.cursor()
+        cur.execute(sql)
+        self.commit(cur)    
 
     def query(self, sql):
         cur = self.conn.cursor()

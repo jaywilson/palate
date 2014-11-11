@@ -14,52 +14,6 @@ function Palate() {
 	// 
 	// models
 	//
-	this.Challenge = Backbone.Model.extend({
-		id: 0,
-		title: "",
-		desc: "",
-		tags: [],
-		imageUuid: ""
-	});
-
-	this.Challenges = Backbone.Collection.extend({
-		model: me.Challenge,
-		url: "/challenges",
-		parse: function(response) {
-			return response.items;
-		}
-	});
-
-	this.ChallengeHome = this.Challenge.extend({
-		urlRoot: "/home",
-		images: [],
-		userCount: 0,
-		parse: function(response) {
-			return response.attributes
-		}
-	});
-
-	this.ChallengeFeed = Backbone.Model.extend({
-		urlRoot: "/feed",
-		registrationId: 0,
-		challengeId: 0,
-		userId: 0,
-		title: "",
-		desc: "",
-		countSteps: 0,
-		currentStep: 0,
-		imageUuids: [],
-		parse: function(response) {
-			return response.attributes;
-		}
-	});
-
-	this.ChallengeUserProgress = Backbone.Model.extend({
-		urlRoot: "/progress",
-		challengeId: 0,
-		userId: 0,
-		imageUuid: ""
-	});
 
 	this.Image = Backbone.Model.extend({
 		urlRoot: "/image",
@@ -74,6 +28,7 @@ function Palate() {
 	//
 	// templates
 	//
+
 	// challenge list
 	this.challengeItemTmp = _.template(document.querySelector("#challengeItemTmp").innerHTML);
 	this.challengeItemTagsTmp = _.template(document.querySelector("#challengeItemTagsTmp").innerHTML);
@@ -90,11 +45,38 @@ function Palate() {
 	// tiles container
 	this.tilesTmp = _.template(document.querySelector("#tilesTmp").innerHTML);
 
+	// caption
+	this.captionTmp = _.template(document.querySelector("#captionTmp").innerHTML);
+	this.challengeCheckListTmp = _.template(document.querySelector("#challengeCheckListTmp").innerHTML);
+
 	$("#templates").remove();
 
-	//
-	// views
-	//
+	// ****************
+	// CHALLENGE LIST *
+	// ****************
+	this.Challenge = Backbone.Model.extend({
+		id: 0,
+		title: "",
+		desc: "",
+		tags: [],
+		imageUuid: ""
+	});
+
+	this.Challenges = Backbone.Collection.extend({
+		model: me.Challenge,
+		userId: -1, // optional
+		url: function() {
+			if (this.userId === -1) {
+				return "/challenges"
+			} else {
+				return "/challenges/" + this.userId
+			}
+		},
+		parse: function(response) {
+			return response.items;
+		}
+	});
+
 	this.ChallengeListView = Backbone.View.extend({
 
 		el: document.querySelector("#challengeListCont"),
@@ -125,13 +107,25 @@ function Palate() {
 				view.$el.append(row);
 
 				$("#coverImageLink" + attr.id).bind("click", function(event) {
-					me.ListToDetail.modelClicked = model;
+					me.pageModel = model;
 				});
 			});
 		}
 	});
 
-	this.ChallengeView = Backbone.View.extend({
+	// ****************
+	// CHALLENGE HOME *
+	// ****************
+	this.ChallengeHome = this.Challenge.extend({
+		urlRoot: "/home",
+		images: [],
+		userCount: 0,
+		parse: function(response) {
+			return response.attributes
+		}
+	});
+
+	this.ChallengeHomeView = Backbone.View.extend({
 
 		el: document.querySelector("#challengeCont"),
 
@@ -172,8 +166,33 @@ function Palate() {
 			var view = this;
 
 			$("#challengeFeedLink").on("click", function() {
-				me.ListToDetail.modelClicked = view.model;
+				me.pageModel = view.model;
 			});
+		}
+	});
+
+	// ****************
+	// CHALLENGE FEED *
+	// ****************
+	this.ChallengeUserProgress = Backbone.Model.extend({
+		urlRoot: "/progress",
+		challengeId: 0,
+		userId: 0,
+		imageUuid: ""
+	});
+
+	this.ChallengeFeed = Backbone.Model.extend({
+		urlRoot: "/feed",
+		registrationId: 0,
+		challengeId: 0,
+		userId: 0,
+		title: "",
+		desc: "",
+		countSteps: 0,
+		currentStep: 0,
+		imageUuids: [],
+		parse: function(response) {
+			return response.attributes;
 		}
 	});
 
@@ -197,13 +216,17 @@ function Palate() {
 				userId: 0
 			};
 
+			// populate jquery content container
 			this.$el.html(me.challengeFeedTmp(data));
+			// enhance template elements
 			this.$el.trigger('create');
 
+			
 			$("#feedTitle").html(attr.title);
 
 			var view = this;
 
+			// set up tab content events after enhanced elements created
 			$("#firstTabLink").on("click", function() {
 				$("#firstTab").html(view.renderFirstTab(attr));
 			});
@@ -242,12 +265,98 @@ function Palate() {
 		}
 	});
 
+	// *********
+	// CAPTION *
+	// *********
+	
+	// and Challenges (userId)
+	this.CaptionView = Backbone.View.extend({
+		el: document.querySelector("#captionCont"),
+		imageUuid: "",
+
+		render: function() {
+			var userChallenges = new me.Challenges();
+			userChallenges.userId = 0;
+			userChallenges.fetch({async: false});
+
+			var listHtml = this.renderUserChallenges(userChallenges.models);
+
+			var data = {
+				imageUrl: me.imgRoot + this.imageUuid,
+				userChallengeList: listHtml
+			};
+
+			this.$el.html(me.captionTmp(data));
+			this.$el.trigger('create');
+
+			me.s3Upload(this.imageUuid);    
+		},
+
+		renderUserChallenges: function(userChallenges) {
+			var html = "";
+			_.each(userChallenges, function(model, i) {
+				var attr = model.attributes;
+				html += me.challengeCheckListTmp({checkBoxId: "userListCheck" + attr.id, title: attr.title});
+			});
+			return html;
+		}
+	});
+
+	this.pageModel = {}
+
 	//
-	// transitions
+	// methods
 	//
-	this.ListToDetail = {
-		modelClicked: {}
-	};
+	this.s3Upload = function(imageUuid) {
+        var status_elem = document.getElementById("imageUploadStatus");
+        var preview_elem = document.getElementById("captionImage");
+
+        var s3upload = new S3Upload({
+            file_dom_selector: 'file',
+            s3_sign_put_url: '/sign_s3/',
+            s3_object_name: imageUuid,
+
+            onProgress: function(percent, message) {
+                status_elem.innerHTML = 'Upload progress: ' + percent + '% ' + message;
+            },
+
+            onFinishS3Put: function(url) {
+            	console.log(url);
+            	status_elem.style.display = "none";
+                preview_elem.src = url;
+            },
+
+            onError: function(status) {
+                status_elem.innerHTML = 'Upload error: ' + status;
+            }
+        });    
+    };
+
+    this.completeStep = function() {
+        var challengeId = parseInt(document.querySelector("#feedChallengeId").value);
+        var currentStepSequence = parseInt(document.querySelector("#challengeProgress").value);
+
+        var image = new palate.Image();
+        image.save();
+        image.on('sync', function() {
+            me.goTo("captionPage", image);
+        });
+    };
+
+    this.postProgress = function() {
+    	var progress = new palate.ChallengeUserProgress({
+            userId: 0,
+            challengeId: challengeId,
+            currentStepSequence: currentStepSequence,
+            imageUuid: imageUuid
+        });
+        progress.save();
+    };
+
+    this.goTo = function(pageName, model) {
+    	me.pageModel = model;
+    	$( ":mobile-pagecontainer" ).pagecontainer("change", "#" + pageName);
+    }
 
 	this.main = function() {
 		var me = this;
@@ -261,7 +370,7 @@ function Palate() {
 		});		
 
 		$(document).on('pagebeforeshow', '#challengeFeedPage', function(event, ui) {
-			var attr = me.ListToDetail.modelClicked.attributes;
+			var attr = me.pageModel.attributes;
 
 			// check for transition from challenge home; indicates feed should be created
 			if (ui.prevPage[0].id === "challengeHome") {
@@ -281,12 +390,19 @@ function Palate() {
 		});
 
 		$(document).on('pagebeforeshow', '#challengeHome', function() {
-			attr = me.ListToDetail.modelClicked.attributes;
+			attr = me.pageModel.attributes;
 			home = new me.ChallengeHome({id: attr.id});
 			home.fetch({"async": false});
 
-			var challengeView = new me.ChallengeView({model: home});
-			challengeView.render();
+			var view = new me.ChallengeHomeView({model: home});
+			view.render();
+		});
+
+		$(document).on('pagebeforeshow', '#captionPage', function() {
+			attr = me.pageModel.attributes;
+			var view = new me.CaptionView();
+			view.imageUuid = attr.uuid;
+			view.render();
 		});
 	}
 };
