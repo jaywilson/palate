@@ -373,8 +373,6 @@ function Palate() {
     }
 
 	this.main = function() {
-		var me = this;
-
 		$(document).on("pagebeforeshow", "#loginPage", function(event) {
 			$("#loginSubmit").on("click", function(clickEvent) {
 				var usr = $("#username").val();
@@ -383,25 +381,24 @@ function Palate() {
 				var data = {username: usr, password: pw};
 
 				$.ajax({
-		          url: "/login",
-		          type: "POST",
-		          data: JSON.stringify(data),
-		          async: true,
-		          contentType: "application/json",
-    			  dataType: "json",
-		          success: function (result) {
-		            if(result.success === true) {
-		            	me.login(result.username);
-		                me.goTo("challengeListPage", {});
-		            } else {
-		                alert("Wrong Username/Email and password combination");
-		                me.goTo("homePage", {});
-		            }
-		          },
-		          error: function (request,error) {
-		            alert('Network error has occurred please try again!'+error);
-		          }, 
-
+		            url: "/login",
+		            type: "POST",
+		            data: JSON.stringify(data),
+		            async: true,
+		            contentType: "application/json",
+    			    dataType: "json",
+		            success: function (result) {
+		                if(result.success === true) {
+		            		me.login(result.username);
+		                	me.goTo("challengeListPage", {});
+		            	} else {
+		                	alert("Wrong Username/Email and password combination");
+		                	me.goTo("homePage", {});
+		            	}
+		          	},
+		          	error: function (request,error) {
+		            	alert('Network error has occurred please try again!'+error);
+		          	},
 		        });
 			});
 		});
