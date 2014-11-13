@@ -24,6 +24,14 @@ class Palate:
         cur.execute(open("sql/data.sql", "r").read())
         self.commit(cur)
 
+    def getUser(self, username):
+        result = self.query("select u.id, u.name, u.password from usr u where u.name = '%s';" % (username))    
+        if len(result) == 0:
+            return None
+        else:
+            user = result[0]
+            return {"id": user[0], "name": user[1], "password": user[2]}
+
     def getChallenges(self):
         return self.query("select c.id, c.title, c.description, i.uuid from challenge c join image i on i.id = c.imageId;")
 
@@ -77,6 +85,17 @@ class Palate:
         cur.execute("insert into challengeUserProgress (userId, challengeId, stepId, imageId) values (%s, %s, %s, %s);" % (userId, challengeId, stepId, imageId))
         self.commit(cur)
 
+    def tryLogin(self, username, password):
+        print("trying login for %s" % (username))
+        user = self.getUser(username)
+        print("user: " + str(user))
+        if user is None:
+            return None
+        elif password == user['password']:
+            return LoginAttempt(user, True)
+        else:
+            return LoginAttempt(user, False)    
+
     def execute(self, sql):
         cur = self.conn.cursor()
         cur.execute(sql)
@@ -92,3 +111,25 @@ class Palate:
     def commit(self, cur):
         self.conn.commit()
         cur.close()
+
+class LoginAttempt:
+    def __init__(self, user, is_authenticated, is_active = True):
+        self.id = unicode(user['name'])
+        self.authenticated = is_authenticated
+        self.active = is_active
+        self.anonymous = False
+
+    def get_id(self):
+        return self.id
+
+    def is_authenticated(self):
+        return self.authenticated
+
+    def is_anonymous(self):
+        return False
+
+    def is_active(self):
+        return self.active    
+
+    def __str__(self):
+        return "id=" + self.id + ",auth=" + str(self.authenticated) + ",active=" + str(self.active)

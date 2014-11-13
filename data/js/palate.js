@@ -302,14 +302,21 @@ function Palate() {
 		}
 	});
 
-	this.pageModel = {}
+	this.pageModel = {};
+	me.username = "Anonymous";
 
 	//
 	// methods
 	//
+
+	var imageTmp = _.template('<img src="{ url }" class="challengeImage" id="captionImage" style="width: 100px;"/>');
+	var statusTmp = '<p id="imageUploadStatus">';
+
 	this.s3Upload = function(imageUuid) {
-        var status_elem = document.getElementById("imageUploadStatus");
-        var preview_elem = document.getElementById("captionImage");
+        var preview_elem = document.getElementById("imagePreview");
+		
+		preview_elem.innerHTML = statusTmp;
+		var status_elem = document.getElementById("imageUploadStatus");
 
         var s3upload = new S3Upload({
             file_dom_selector: 'file',
@@ -317,13 +324,12 @@ function Palate() {
             s3_object_name: imageUuid,
 
             onProgress: function(percent, message) {
-                status_elem.innerHTML = 'Upload progress: ' + percent + '% ' + message;
+                status_elem.innerHTML = 'Uploading (' + percent + '% ' + message + ')';
             },
 
             onFinishS3Put: function(url) {
             	console.log(url);
-            	status_elem.style.display = "none";
-                preview_elem.src = url;
+                preview_elem.innerHTML = imageTmp({url: url});
             },
 
             onError: function(status) {
@@ -358,8 +364,47 @@ function Palate() {
     	$( ":mobile-pagecontainer" ).pagecontainer("change", "#" + pageName);
     }
 
+    this.login = function(username) {
+    	me.username = username;
+    }
+
+    this.logout = function() {
+    	me.username = "Anonymous";
+    }
+
 	this.main = function() {
 		var me = this;
+
+		$(document).on("pagebeforeshow", "#loginPage", function(event) {
+			$("#loginSubmit").on("click", function(clickEvent) {
+				var usr = $("#username").val();
+				var pw = $("#password").val();
+
+				var data = {username: usr, password: pw};
+
+				$.ajax({
+		          url: "/login",
+		          type: "POST",
+		          data: JSON.stringify(data),
+		          async: true,
+		          contentType: "application/json",
+    			  dataType: "json",
+		          success: function (result) {
+		            if(result.success === true) {
+		            	me.login(result.username);
+		                me.goTo("challengeListPage", {});
+		            } else {
+		                alert("Wrong Username/Email and password combination");
+		                me.goTo("homePage", {});
+		            }
+		          },
+		          error: function (request,error) {
+		            alert('Network error has occurred please try again!'+error);
+		          }, 
+
+		        });
+			});
+		});
 
 		$(document).on("pagebeforeshow", "#challengeListPage", function(event) {
 			var challenges = new me.Challenges();
@@ -374,6 +419,7 @@ function Palate() {
 
 			// check for transition from challenge home; indicates feed should be created
 			if (ui.prevPage[0].id === "challengeHome") {
+				// page model is a Challenge
 				var feed = new me.ChallengeFeed({
 					userId: 0, 
 					challengeId: attr.id
@@ -381,6 +427,7 @@ function Palate() {
 
 				feed.save();
 			} else {
+				// page model is a Feed
 				var feed = new me.ChallengeFeed({id: attr.id});
 				feed.fetch({"async": false});	
 			}

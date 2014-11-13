@@ -1,23 +1,49 @@
 from flask import Flask
+from flask_login import LoginManager, login_user, login_required, current_user
 from flask import render_template, jsonify, request, redirect
 from hashlib import sha1
 
-from palate import Palate
+from palate import Palate, LoginAttempt
 
 import os
 import time, base64, hmac, urllib, uuid
 
 app = Flask(__name__, static_folder="data")
+app.secret_key = 'eioughie3984'
+
+loginManager = LoginManager()
+loginManager.init_app(app)
 
 palate = Palate()
 palate.createSchema()
 palate.insertData()
+
+@loginManager.user_loader
+def load_user(username):
+    user = palate.getUser(username)
+    if user is None:
+        return None
+    else:
+        return LoginAttempt(user, True)
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    loginData = request.get_json()
+    print("loginData: " + str(loginData))
+    user = palate.getUser(loginData[unicode('username')])
+    print("user: " + str(user))
+    loginAttempt = palate.tryLogin(user['name'], str(loginData[unicode('password')]))
+    print("loginAttempt: " + str(loginAttempt))
+
+    success = login_user(loginAttempt)
+    return jsonify({"success": success})
 
 @app.route("/")
 def home():
     return render_template('home.html')
 
 @app.route("/challenges")
+@login_required
 def getChallenges():
     dbChallenges = palate.getChallenges()
 
@@ -172,9 +198,6 @@ def saveChallengeUserProgress():
         palate.updateCurrentStep(userId, challengeId, completedStepSequence)
 
         return jsonify({"attributes": progressModel})
-
-def saveImage(userId, imageId):    
-    pass
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))

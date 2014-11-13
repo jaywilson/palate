@@ -43,13 +43,23 @@
 	});
 </script>
 
-<div data-role="page" id="loginPage">
+<div data-role="page" id="homePage">
 	<div role="main" class="ui-content">
 		<div id="loginCont" class="palate">
 			<h1>Palate</h1>
 			<a href="#registerPage" class="ui-btn ui-btn-inline">Sign Up</a>
-			<a href="#challengeListPage" class="ui-btn ui-btn-inline" id="challengeListPageLink">Log In</a>
+			<a href="#loginPage" class="ui-btn ui-btn-inline" id="challengeListPageLink">Log In</a>
 		</div>
+	</div>
+</div>
+
+<div data-tole="page" id="loginPage">
+	<div role="main" class="ui-content">
+		<label for="text-basic">Username:</label>
+		<input type="text" name="text-basic" id="username" value="">
+		<label for="password">Password:</label>
+		<input type="password" name="password" id="password" value="" autocomplete="off">
+		<input type="button" id="loginSubmit" name="loginSubmit" value="Login" >
 	</div>
 </div>
 
@@ -157,15 +167,22 @@
 
 	<!-- CAPTION -->
 	<div id="captionTmp">
-		<img src='{ imageUrl }' class='challengeImage' id='captionImage' style="width: 100px;"/>
-		<p id="imageUploadStatus">
-		<input type="text" id="captionText" />
+		<div class="ui-grid-b">
+		    <div class="ui-block-a"><div class="ui-bar ui-bar-a" style="height:60px" id="imagePreview">
+				
+			</div></div>
+		    <div class="ui-block-c"><div class="ui-bar ui-bar-a" style="height:60px">
+				<input type="text" id="captionText" />
+				<p>Add a Caption</p>
+			</div></div>
+		</div>
 		<form>
 			<fieldset>
 				<legend>My Challenges</legend>
 				{ userChallengeList }
 			</fieldset>
 		</form>
+		<a href="#" class="ui-btn">Anchor</a>
 	</div>
 	<div id="challengeCheckListTmp">
 		<input type="checkbox" id="{ checkBoxId }" />
