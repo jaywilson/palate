@@ -1,5 +1,5 @@
 from flask import Flask
-from flask_login import LoginManager, login_user, login_required, current_user
+from flask_login import LoginManager, login_user, login_required, current_user, AnonymousUserMixin
 from flask import render_template, jsonify, request, redirect
 from hashlib import sha1
 
@@ -26,6 +26,9 @@ def load_user(username):
     else:
         return LoginAttempt(user, True)
 
+def getUserId():
+    return current_user.id        
+
 @app.route("/login", methods=["GET", "POST"])
 def login():
     loginData = request.get_json()
@@ -42,13 +45,15 @@ def login():
 def home():
     return render_template('home.html')
 
-@app.route("/challenges")
+@app.route("/challengeList")
 @login_required
-def getChallenges():
-    dbChallenges = palate.getChallenges()
+def getChallengeList():
+    userId = getUserId()
+    userChallenges = palate.getUserChallenges(userId)
+    recChallenges = palate.getRecommendedChallenges(userId)
 
     items = []
-    for ch in dbChallenges:
+    for ch in allChallenges:
         dbTags = palate.getChallengeTags(ch[0])
 
         tagItems = []
@@ -65,8 +70,10 @@ def getChallenges():
 	
     return jsonify({"items": items})
 
-@app.route("/challenges/<userId>")
+@app.route("/userChallenges")
+@login_required
 def getUserChallenges(userId):
+    userId = getUserId()
     dbChallenges = palate.getUserChallenges(userId)
 
     items = []
@@ -81,6 +88,7 @@ def getUserChallenges(userId):
 
 
 @app.route("/home/<challengeId>")
+@login_required
 def getChallengeHome(challengeId):
     userCount = palate.getChallengeUserCount(challengeId)[0][0]    
     imageUuids = palate.getChallengeImages(challengeId)
@@ -100,50 +108,46 @@ def getChallengeHome(challengeId):
 
     return jsonify({"attributes": attr})    
 
-@app.route("/feed", methods=["POST", "PUT"])
+@app.route("/feed", methods=["POST"])
+@login_required
 def saveChallengeFeed():
-    if request.method == 'POST':
-        feedModel = request.get_json()
+    userId = current_user.id
+    feedModel = request.get_json()
 
-        userId = feedModel['userId']
-        challengeId = feedModel['challengeId']
+    challengeId = feedModel['challengeId']
 
-        registrationId = palate.createRegistration(userId, challengeId);
+    registrationId = palate.createRegistration(userId, challengeId);
 
-        challenge = palate.getChallenge(challengeId)[0]
+    challenge = palate.getChallenge(challengeId)[0]
 
-        print "challenge: " + str(challenge)
+    print "challenge: " + str(challenge)
 
-        imageUuids = palate.getChallengeImages(challengeId)
+    imageUuids = palate.getChallengeImages(challengeId)
 
-        print "imageUuids: " + str(imageUuids)
+    print "imageUuids: " + str(imageUuids)
 
-        currentStep = palate.getCurrentStep(userId, challengeId)
+    currentStep = palate.getCurrentStep(userId, challengeId)
 
-        print "currentStep: " + str(currentStep)
+    print "currentStep: " + str(currentStep)
 
-        flatUuids = []
-        for uuid in imageUuids:
-            flatUuids.append(uuid[0])
+    flatUuids = []
+    for uuid in imageUuids:
+        flatUuids.append(uuid[0])
 
-        attr = {
-            "registrationId": registrationId,
-            "challengeId": challenge[0],
-            "userId": userId,
-            "title": challenge[1],
-            "desc": challenge[2],
-            "countSteps": challenge[3],
-            "currentStep": currentStep,
-            "imageUuids": flatUuids
-        }
+    attr = {
+        "registrationId": registrationId,
+        "challengeId": challenge[0],
+        "userId": userId,
+        "title": challenge[1],
+        "desc": challenge[2],
+        "countSteps": challenge[3],
+        "currentStep": currentStep,
+        "imageUuids": flatUuids
+    }
 
-        print "Attr: " + str(attr)
+    print "Attr: " + str(attr)
 
-        return jsonify({"attributes": attr})
-
-@app.route("/feed/<registrationId>", methods=["GET"])
-def getChallengeFeed(registrationId):
-    pass
+    return jsonify({"attributes": attr})
 
 @app.route('/sign_s3/')
 def sign_s3():
@@ -157,7 +161,8 @@ def sign_s3():
 
     print "Image UUID: " + str(imageUuid)
 
-    expires = long(time.time()+120)
+    # signature lasts for 10 sec
+    expires = long(time.time() + 10)
     amzHeaders = "x-amz-acl:public-read"
 
     putRequest = "PUT\n\n%s\n%d\n%s\n/%s/%s" % (mimeType, expires, amzHeaders, S3_BUCKET, objectName)

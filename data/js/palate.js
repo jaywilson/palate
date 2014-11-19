@@ -62,16 +62,9 @@ function Palate() {
 		imageUuid: ""
 	});
 
-	this.Challenges = Backbone.Collection.extend({
+	this.ChallengeList = Backbone.Collection.extend({
 		model: me.Challenge,
-		userId: -1, // optional
-		url: function() {
-			if (this.userId === -1) {
-				return "/challenges"
-			} else {
-				return "/challenges/" + this.userId
-			}
-		},
+		url: "/challengeList",
 		parse: function(response) {
 			return response.items;
 		}
@@ -105,6 +98,7 @@ function Palate() {
 
 				var row = me.challengeItemTmp(data);
 				view.$el.append(row);
+				view.$el.trigger('create');
 
 				$("#coverImageLink" + attr.id).bind("click", function(event) {
 					me.pageModel = model;
@@ -127,7 +121,7 @@ function Palate() {
 
 	this.ChallengeHomeView = Backbone.View.extend({
 
-		el: document.querySelector("#challengeCont"),
+		el: document.querySelector("#challengeHomeCont"),
 
 		initialize: function() {
 			this.listenTo(this.model, "change", this.render);
@@ -185,7 +179,6 @@ function Palate() {
 		urlRoot: "/feed",
 		registrationId: 0,
 		challengeId: 0,
-		userId: 0,
 		title: "",
 		desc: "",
 		countSteps: 0,
@@ -212,8 +205,7 @@ function Palate() {
 				countSteps: attr.countSteps,
 				currentStep: attr.currentStep,
 				content: content,
-				challengeId: attr.challengeId,
-				userId: 0
+				challengeId: attr.challengeId
 			};
 
 			// populate jquery content container
@@ -269,14 +261,20 @@ function Palate() {
 	// CAPTION *
 	// *********
 	
-	// and Challenges (userId)
+	this.UserChallenges = Backbone.Collection.extend({
+		model: me.Challenge,
+		url: "/userChallenges",
+		parse: function(response) {
+			return response.items;
+		}
+	});
+
 	this.CaptionView = Backbone.View.extend({
 		el: document.querySelector("#captionCont"),
 		imageUuid: "",
 
 		render: function() {
 			var userChallenges = new me.Challenges();
-			userChallenges.userId = 0;
 			userChallenges.fetch({async: false});
 
 			var listHtml = this.renderUserChallenges(userChallenges.models);
@@ -288,6 +286,10 @@ function Palate() {
 
 			this.$el.html(me.captionTmp(data));
 			this.$el.trigger('create');
+
+			$("#postImage").on("click", function() {
+				me.goTo("challengeFeedPage", {id: });
+			});
 
 			me.s3Upload(this.imageUuid);    
 		},
@@ -373,6 +375,20 @@ function Palate() {
     }
 
 	this.main = function() {
+		/*
+		This sets up the page transitions.  
+
+		For each page, create a collection or model and attach it to a view
+		Then call view.render()
+
+		Each view uses templates to build html, and then calls _.template()
+		and puts the result in $el.html()
+
+		Then it calls $el.trigger('create').  This is necessary because html
+		generated from the template will use JQuery mobile's high-level
+		markup, which needs to be enhanced dynamically.
+		*/
+
 		$(document).on("pagebeforeshow", "#loginPage", function(event) {
 			$("#loginSubmit").on("click", function(clickEvent) {
 				var usr = $("#username").val();
@@ -404,7 +420,7 @@ function Palate() {
 		});
 
 		$(document).on("pagebeforeshow", "#challengeListPage", function(event) {
-			var challenges = new me.Challenges();
+			var challenges = new me.ChallengeList();
 			challenges.fetch({"async": false});
 
 			var challengesView = new me.ChallengeListView({collection: challenges});

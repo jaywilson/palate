@@ -38,6 +38,9 @@ class Palate:
     def getUserChallenges(self, userId):
         return self.query("select c.id, c.title, c.description, c.countSteps from challengeRegistration r join challenge c on c.id = r.challengeId where r.userId = %s;" % (userId))    
 
+    def getRecommendedChallenges(self, userId):
+        return self.query("select c.id, c.title, c.description, c.countSteps from challengeRegistration r join challenge c on c.id = r.challengeId where r.userId != %s;" % (userId))    
+
     def getChallenge(self, challengeId):
         return self.query("select id, title, description, countSteps from challenge where id = %s;" % (challengeId))    
 

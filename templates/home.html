@@ -8,13 +8,13 @@
 	<meta name="apple-mobile-web-app-capable" content="yes">
 	<meta name="apple-mobile-web-app-title" content="Palate">
 
-	<link rel="stylesheet" href="http://code.jquery.com/mobile/1.4.4/jquery.mobile-1.4.4.min.css" />
-    <!-- <link rel="stylesheet" href="data/jquery.mobile-1.4.4/jquery.mobile-1.4.4.min.css" /> -->
+	<!-- <link rel="stylesheet" href="http://code.jquery.com/mobile/1.4.4/jquery.mobile-1.4.4.min.css" /> -->
+    <link rel="stylesheet" href="data/jquery.mobile-1.4.4/jquery.mobile-1.4.4.min.css" />
     <link rel="stylesheet" href="data/css/palate.css"/>
     <link rel="stylesheet" href="data/css/transitions.css"/>
 
-    <script src="http://code.jquery.com/jquery-2.1.0.min.js"></script>
-	<!--  <script src="data/js/jquery-2.1.1.min.js"></script> -->
+    <!-- <script src="http://code.jquery.com/jquery-2.1.0.min.js"></script> -->
+	<script src="data/js/jquery-2.1.1.min.js"></script>
     
     <script>
         $(document).on( "mobileinit", function() {
@@ -22,8 +22,8 @@
         });
     </script>
 
-    <script src="http://code.jquery.com/mobile/1.4.4/jquery.mobile-1.4.4.min.js"></script>
-    <!-- <script src="data/jquery.mobile-1.4.4/jquery.mobile-1.4.4.js"></script> -->
+    <!-- <script src="http://code.jquery.com/mobile/1.4.4/jquery.mobile-1.4.4.min.js"></script> -->
+    <script src="data/jquery.mobile-1.4.4/jquery.mobile-1.4.4.js"></script>
 
 	<script src="data/js/underscore.js"></script>
 	<script src="data/js/backbone.js"></script>
@@ -73,7 +73,7 @@
 </div>
 
 <div data-role="page" id="challengeHome">
-	<div role="main" class="ui-content" id="challengeCont">
+	<div role="main" class="ui-content" id="challengeHomeCont">
 	</div>
 </div>
 
@@ -160,7 +160,6 @@
 		</div>
 		<div id="cameraControls">
 			<input type="file" name="file" accept="image/*" capture="camera" id="file" onchange="palate.completeStep();">
-			<input type="hidden" name="userId" id="userId" value="{ userId }">
 		    <input type="hidden" name="challengeId" id="feedChallengeId" value="{ challengeId }">
 		</div>
 	</div>
@@ -182,7 +181,7 @@
 				{ userChallengeList }
 			</fieldset>
 		</form>
-		<a href="#" class="ui-btn">Anchor</a>
+		<input type="button" id="postImage" />
 	</div>
 	<div id="challengeCheckListTmp">
 		<input type="checkbox" id="{ checkBoxId }" />
