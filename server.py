@@ -19,8 +19,8 @@ palate.createSchema()
 palate.insertData()
 
 @loginManager.user_loader
-def load_user(username):
-    user = palate.getUser(username)
+def load_user(id):
+    user = palate.getUser(id)
     if user is None:
         return None
     else:
@@ -33,9 +33,12 @@ def getUserId():
 def login():
     loginData = request.get_json()
     print("loginData: " + str(loginData))
-    user = palate.getUser(loginData[unicode('username')])
-    print("user: " + str(user))
-    loginAttempt = palate.tryLogin(user['name'], str(loginData[unicode('password')]))
+    
+    name = loginData[unicode('username')]
+    password = loginData[unicode('password')]
+
+    loginAttempt = palate.tryLogin(name, password)
+
     print("loginAttempt: " + str(loginAttempt))
 
     success = login_user(loginAttempt)
@@ -49,11 +52,14 @@ def home():
 @login_required
 def getChallengeList():
     userId = getUserId()
+    print("userId" + str(userId))
     userChallenges = palate.getUserChallenges(userId)
     recChallenges = palate.getRecommendedChallenges(userId)
 
     items = []
-    for ch in allChallenges:
+    for ch in userChallenges:
+        print("ch:" + str(ch))
+
         dbTags = palate.getChallengeTags(ch[0])
 
         tagItems = []
@@ -65,14 +71,33 @@ def getChallengeList():
             "title": ch[1], 
             "desc": ch[2], 
             "tags": tagItems,
-    		"imageUuid": ch[3]
+    		"imageUuid": ch[4],
+            "regId": ch[5]
         })
+
+    for ch in recChallenges:
+        print("ch:" + str(ch))
+
+        dbTags = palate.getChallengeTags(ch[0])
+
+        tagItems = []
+        for tag in dbTags:
+            tagItems.append(tag[1])
+
+        items.append({
+            "id": ch[0], 
+            "title": ch[1], 
+            "desc": ch[2], 
+            "tags": tagItems,
+            "imageUuid": ch[4],
+            "regId": 0
+        })        
 	
     return jsonify({"items": items})
 
 @app.route("/userChallenges")
 @login_required
-def getUserChallenges(userId):
+def getUserChallenges():
     userId = getUserId()
     dbChallenges = palate.getUserChallenges(userId)
 
@@ -108,15 +133,21 @@ def getChallengeHome(challengeId):
 
     return jsonify({"attributes": attr})    
 
-@app.route("/feed", methods=["POST"])
+@app.route("/feed/<id>", methods=["POST", "PUT", "GET"])
 @login_required
-def saveChallengeFeed():
+def saveChallengeFeed(id):
     userId = current_user.id
-    feedModel = request.get_json()
-
-    challengeId = feedModel['challengeId']
-
-    registrationId = palate.createRegistration(userId, challengeId);
+    model = request.get_json()
+    print("feed model " + str(model))
+    
+    if request.method == 'PUT':
+        challengeId = model['challengeId']
+        registrationId = palate.createRegistration(userId, challengeId);
+        print "create registration " + str(registrationId)
+    else:
+        registration = palate.getRegistration(id)[0]
+        challengeId = registration[1]
+        registrationId = id
 
     challenge = palate.getChallenge(challengeId)[0]
 

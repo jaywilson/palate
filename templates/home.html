@@ -124,7 +124,7 @@
 	<!-- CHALLENGE LIST -->
 	<div id="challengeItemTmp">
 		<div class='challengeImageCont'>
-			<a href="#challengeHome" id="coverImageLink{ id }">
+			<a href="#{ pageName }" id="coverImageLink{ id }">
 				<img src='{ imageUrl }' class='challengeImage'/>
 			</a>
 			<h2 class='challengeTitle'>{ title }</h2>
@@ -161,6 +161,7 @@
 		<div id="cameraControls">
 			<input type="file" name="file" accept="image/*" capture="camera" id="file" onchange="palate.completeStep();">
 		    <input type="hidden" name="challengeId" id="feedChallengeId" value="{ challengeId }">
+		    <input type="hidden" name="feedRegId" id="feedRegId" value="{ regId }">
 		</div>
 	</div>
 

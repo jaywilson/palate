@@ -89,11 +89,15 @@ function Palate() {
 					tagsHtml += me.challengeItemTagsTmp({tagName: elem, bottomPos: i * 40});
 				});
 
+				console.log(attr.isRegistered);
+				var pageName = attr.regId == 0 ? "challengeHome" : "challengeFeedPage";
+
 				var data = {
 					id: attr.id,
 					title: attr.title,
 					imageUrl: me.imgRoot + attr.imageUuid,
-					tags: tagsHtml
+					tags: tagsHtml,
+					pageName: pageName
 				};
 
 				var row = me.challengeItemTmp(data);
@@ -101,7 +105,7 @@ function Palate() {
 				view.$el.trigger('create');
 
 				$("#coverImageLink" + attr.id).bind("click", function(event) {
-					me.pageModel = model;
+					me.pageModel = attr.regId == 0 ? model : {id: attr.regId};
 				});
 			});
 		}
@@ -205,7 +209,8 @@ function Palate() {
 				countSteps: attr.countSteps,
 				currentStep: attr.currentStep,
 				content: content,
-				challengeId: attr.challengeId
+				challengeId: attr.challengeId,
+				regId: attr.registrationId
 			};
 
 			// populate jquery content container
@@ -272,12 +277,10 @@ function Palate() {
 	this.CaptionView = Backbone.View.extend({
 		el: document.querySelector("#captionCont"),
 		imageUuid: "",
+		regId: 0,
 
 		render: function() {
-			var userChallenges = new me.Challenges();
-			userChallenges.fetch({async: false});
-
-			var listHtml = this.renderUserChallenges(userChallenges.models);
+			var listHtml = this.renderUserChallenges(this.collection.models);
 
 			var data = {
 				imageUrl: me.imgRoot + this.imageUuid,
@@ -288,7 +291,7 @@ function Palate() {
 			this.$el.trigger('create');
 
 			$("#postImage").on("click", function() {
-				me.goTo("challengeFeedPage", {id: });
+				me.goTo("challengeFeedPage", {id: this.regId});
 			});
 
 			me.s3Upload(this.imageUuid);    
@@ -341,17 +344,19 @@ function Palate() {
     };
 
     this.completeStep = function() {
-        var challengeId = parseInt(document.querySelector("#feedChallengeId").value);
-        var currentStepSequence = parseInt(document.querySelector("#challengeProgress").value);
+        var regId = parseInt(document.querySelector("#feedRegId").value);
 
         var image = new palate.Image();
         image.save();
         image.on('sync', function() {
-            me.goTo("captionPage", image);
+            me.goTo("captionPage", {uuid: image.uuid, regId: regId});
         });
     };
 
     this.postProgress = function() {
+		var challengeId = parseInt(document.querySelector("#feedChallengeId").value);
+        var currentStepSequence = parseInt(document.querySelector("#challengeProgress").value);
+
     	var progress = new palate.ChallengeUserProgress({
             userId: 0,
             challengeId: challengeId,
@@ -428,12 +433,11 @@ function Palate() {
 		});		
 
 		$(document).on('pagebeforeshow', '#challengeFeedPage', function(event, ui) {
-			var attr = me.pageModel.attributes;
-
 			// check for transition from challenge home; indicates feed should be created
 			if (ui.prevPage[0].id === "challengeHome") {
-				// page model is a Challenge
+				var attr = me.pageModel.attributes;
 				var feed = new me.ChallengeFeed({
+					id: 0,
 					userId: 0, 
 					challengeId: attr.id
 				});
@@ -441,7 +445,7 @@ function Palate() {
 				feed.save();
 			} else {
 				// page model is a Feed
-				var feed = new me.ChallengeFeed({id: attr.id});
+				var feed = new me.ChallengeFeed({id: me.pageModel.id});
 				feed.fetch({"async": false});	
 			}
 
@@ -459,9 +463,14 @@ function Palate() {
 		});
 
 		$(document).on('pagebeforeshow', '#captionPage', function() {
-			attr = me.pageModel.attributes;
-			var view = new me.CaptionView();
+			attr = me.pageModel;
+
+			var userChallenges = new me.UserChallenges();
+			userChallenges.fetch({async: false});
+
+			var view = new me.CaptionView({collection: userChallenges});
 			view.imageUuid = attr.uuid;
+			view.regId = attr.regId;
 			view.render();
 		});
 	}

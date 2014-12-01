@@ -24,22 +24,33 @@ class Palate:
         cur.execute(open("sql/data.sql", "r").read())
         self.commit(cur)
 
-    def getUser(self, username):
-        result = self.query("select u.id, u.name, u.password from usr u where u.name = '%s';" % (username))    
+    def getUserByName(self, name):
+        result = self.query("select u.id, u.name, u.password from usr u where u.name = '%s';" % (name))    
         if len(result) == 0:
             return None
         else:
             user = result[0]
             return {"id": user[0], "name": user[1], "password": user[2]}
 
+    def getUser(self, id):
+        result =  self.query("select u.id, u.name, u.password from usr u where u.id = %s;" % (id))
+        if len(result) == 0:
+            return None
+        else:
+            user = result[0]
+            return {"id": user[0], "name": user[1], "password": user[2]}
+
+    def getRegistration(self, id):
+        return self.query("select id, challengeId, userId, currentStepSequence from challengeRegistration where id = %s;" % (id))        
+
     def getChallenges(self):
         return self.query("select c.id, c.title, c.description, i.uuid from challenge c join image i on i.id = c.imageId;")
 
     def getUserChallenges(self, userId):
-        return self.query("select c.id, c.title, c.description, c.countSteps from challengeRegistration r join challenge c on c.id = r.challengeId where r.userId = %s;" % (userId))    
+        return self.query("select c.id, c.title, c.description, c.countSteps, i.uuid, r.id from challengeRegistration r join challenge c on c.id = r.challengeId join image i on i.id = c.imageId where r.userId = %s;" % (userId))    
 
     def getRecommendedChallenges(self, userId):
-        return self.query("select c.id, c.title, c.description, c.countSteps from challengeRegistration r join challenge c on c.id = r.challengeId where r.userId != %s;" % (userId))    
+        return self.query("select c.id, c.title, c.description, c.countSteps, i.uuid from challenge c join image i on i.id = c.imageId where c.id not in (select distinct challengeId from challengeRegistration where userId = %s);" % (userId))    
 
     def getChallenge(self, challengeId):
         return self.query("select id, title, description, countSteps from challenge where id = %s;" % (challengeId))    
@@ -58,11 +69,7 @@ class Palate:
         return results[0][0]
 
     def updateCurrentStep(self, userId, challengeId, currentStepSequence):
-        self.execute("update challengeRegistration set currentStepSequence = %s where userId = %s and challengeId = %s" % (currentStepSequence, userId, challengeId))    
-
-    def getRegistration(self, registrationId):
-        results = self.query("select challengeId, userId from challengeRegistration where registrationId = %s" % (registrationId))    
-        return results[0]
+        self.execute("update challengeRegistration set currentStepSequence = %s where userId = %s and challengeId = %s" % (currentStepSequence, userId, challengeId))
 
     def createImage(self):
         randomUuid = uuid.uuid4()    
@@ -88,10 +95,9 @@ class Palate:
         cur.execute("insert into challengeUserProgress (userId, challengeId, stepId, imageId) values (%s, %s, %s, %s);" % (userId, challengeId, stepId, imageId))
         self.commit(cur)
 
-    def tryLogin(self, username, password):
-        print("trying login for %s" % (username))
-        user = self.getUser(username)
-        print("user: " + str(user))
+    def tryLogin(self, name, password):
+        print("trying login for userId %s" % (name))
+        user = self.getUserByName(name)
         if user is None:
             return None
         elif password == user['password']:
@@ -117,7 +123,7 @@ class Palate:
 
 class LoginAttempt:
     def __init__(self, user, is_authenticated, is_active = True):
-        self.id = unicode(user['name'])
+        self.id = unicode(user['id'])
         self.authenticated = is_authenticated
         self.active = is_active
         self.anonymous = False
